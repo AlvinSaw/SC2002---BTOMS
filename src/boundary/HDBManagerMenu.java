@@ -1,3 +1,6 @@
+/**
+ * This package contains the boundary classes for the BTO Management System.
+ */
 package boundary;
 
 import control.*;
@@ -8,6 +11,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+/**
+ * HDBManagerMenu class provides the user interface for HDB Managers in the BTO Management System.
+ */
 public class HDBManagerMenu {
     private Scanner scanner = new Scanner(System.in);
     private HDBManager manager;
@@ -16,6 +22,11 @@ public class HDBManagerMenu {
     private EnquiryManager enquiryManager;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    /**
+     * Constructor for HDBManagerMenu.
+     * Initializes the menu with the given manager and managers.
+     * @param manager The HDB Manager using the menu
+     */
     public HDBManagerMenu(HDBManager manager) {
         this.manager = manager;
         this.projectManager = ProjectManager.getInstance();
@@ -23,6 +34,9 @@ public class HDBManagerMenu {
         this.enquiryManager = EnquiryManager.getInstance();
     }
 
+    /**
+     * Displays the HDB Manager menu and handles user interactions.
+     */
     public void show() {
         while (true) {
             System.out.println("\n=== HDB Manager Menu ===");
@@ -74,6 +88,9 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Allows the HDB Manager to create a new BTO project.
+     */
     private void createNewProject() {
         System.out.print("Enter project name: ");
         String projectName = scanner.nextLine();
@@ -118,16 +135,26 @@ public class HDBManagerMenu {
         System.out.println("Project created successfully!");
     }
 
+    /**
+     * Displays all BTO projects in the system.
+     */
     private void viewAllProjects() {
         List<BTOProject> projects = projectManager.getAllProjects();
         displayProjects(projects);
     }
 
+    /**
+     * Displays the projects created by the HDB Manager.
+     */
     private void viewMyProjects() {
         List<BTOProject> projects = manager.getCreatedProjects();
         displayProjects(projects);
     }
 
+    /**
+     * Displays a list of projects and provides options to view details or toggle visibility.
+     * @param projects The list of projects to display
+     */
     private void displayProjects(List<BTOProject> projects) {
         if (projects.isEmpty()) {
             System.out.println("No projects found.");
@@ -180,6 +207,10 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Displays detailed information about a specific BTO project.
+     * @param project The project to view details for
+     */
     private void viewProjectDetails(BTOProject project) {
         System.out.println("\nProject Details:");
         System.out.println("Name: " + project.getProjectName());
@@ -209,6 +240,9 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Displays applications for a specific project created by the HDB Manager.
+     */
     private void viewProjectApplications() {
         List<BTOProject> projects = manager.getCreatedProjects();
         if (projects.isEmpty()) {
@@ -248,6 +282,9 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Displays enquiries for a specific project.
+     */
     private void viewProjectEnquiries() {
         List<BTOProject> projects = projectManager.getAllProjects();
         if (projects.isEmpty()) {
@@ -286,6 +323,9 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Manages officer registrations for a specific project.
+     */
     private void manageOfficerRegistrations() {
         List<BTOProject> projects = manager.getCreatedProjects();
         if (projects.isEmpty()) {
@@ -354,6 +394,9 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Generates various reports for a specific project.
+     */
     private void generateReports() {
         List<BTOProject> projects = manager.getCreatedProjects();
         if (projects.isEmpty()) {
@@ -411,6 +454,10 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Generates a report of all applications for a project.
+     * @param applications The list of applications to include in the report
+     */
     private void generateAllApplicationsReport(List<BTOApplication> applications) {
         System.out.printf("Total Applications: %d%n%n", applications.size());
         for (BTOApplication app : applications) {
@@ -418,6 +465,10 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Generates a report of successful applications for a project.
+     * @param applications The list of applications to include in the report
+     */
     private void generateSuccessfulApplicationsReport(List<BTOApplication> applications) {
         List<BTOApplication> successful = new ArrayList<>();
         for (BTOApplication app : applications) {
@@ -432,6 +483,10 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Generates a report of booked flats for a project.
+     * @param applications The list of applications to include in the report
+     */
     private void generateBookedFlatsReport(List<BTOApplication> applications) {
         List<BTOApplication> booked = new ArrayList<>();
         for (BTOApplication app : applications) {
@@ -446,6 +501,10 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Generates a report of applications grouped by flat type.
+     * @param applications The list of applications to include in the report
+     */
     private void generateApplicationsByFlatTypeReport(List<BTOApplication> applications) {
         Map<FlatType, List<BTOApplication>> byType = new HashMap<>();
         for (BTOApplication app : applications) {
@@ -461,6 +520,10 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Generates a report of applications grouped by marital status.
+     * @param applications The list of applications to include in the report
+     */
     private void generateApplicationsByMaritalStatusReport(List<BTOApplication> applications) {
         Map<MaritalStatus, List<BTOApplication>> byStatus = new HashMap<>();
         for (BTOApplication app : applications) {
@@ -476,6 +539,10 @@ public class HDBManagerMenu {
         }
     }
 
+    /**
+     * Prints the details of a specific application.
+     * @param app The application to print details for
+     */
     private void printApplicationDetails(BTOApplication app) {
         System.out.printf("NRIC: %s%n", app.getApplicant().getNric());
         System.out.printf("Age: %d%n", app.getApplicant().getAge());
@@ -486,6 +553,9 @@ public class HDBManagerMenu {
         System.out.println();
     }
 
+    /**
+     * Allows the HDB Manager to change their password.
+     */
     private void changePassword() {
         System.out.print("Enter current password: ");
         String oldPassword = scanner.nextLine();
@@ -498,4 +568,4 @@ public class HDBManagerMenu {
             System.out.println("Failed to change password.");
         }
     }
-} 
+}

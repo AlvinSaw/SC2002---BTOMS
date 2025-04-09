@@ -1,3 +1,6 @@
+/**
+ * This package contains the boundary classes for the BTO Management System.
+ */
 package boundary;
 
 import control.*;
@@ -6,6 +9,9 @@ import enums.*;
 import java.util.*;
 import java.time.LocalDateTime;
 
+/**
+ * HDBOfficerMenu class provides the user interface for HDB Officers in the BTO Management System.
+ */
 public class HDBOfficerMenu {
     private Scanner scanner = new Scanner(System.in);
     private HDBOfficer officer;
@@ -13,6 +19,11 @@ public class HDBOfficerMenu {
     private ApplicationManager applicationManager;
     private EnquiryManager enquiryManager;
 
+    /**
+     * Constructor for HDBOfficerMenu.
+     * Initializes the menu with the given officer and managers.
+     * @param officer The HDB Officer using the menu
+     */
     public HDBOfficerMenu(HDBOfficer officer) {
         this.officer = officer;
         this.projectManager = ProjectManager.getInstance();
@@ -20,6 +31,9 @@ public class HDBOfficerMenu {
         this.enquiryManager = EnquiryManager.getInstance();
     }
 
+    /**
+     * Displays the HDB Officer menu and handles user interactions.
+     */
     public void show() {
         while (true) {
             System.out.println("\n=== HDB Officer Menu ===");
@@ -59,6 +73,9 @@ public class HDBOfficerMenu {
         }
     }
 
+    /**
+     * Displays available projects for the officer to register.
+     */
     private void viewAvailableProjects() {
         List<BTOProject> projects = projectManager.getAllProjects();
         List<BTOProject> availableProjects = new ArrayList<>();
@@ -100,6 +117,9 @@ public class HDBOfficerMenu {
         }
     }
 
+    /**
+     * Displays the project assigned to the officer.
+     */
     private void viewMyProject() {
         BTOProject project = officer.getAssignedProject();
         if (project == null) {
@@ -119,6 +139,9 @@ public class HDBOfficerMenu {
         }
     }
 
+    /**
+     * Displays and allows the officer to reply to project enquiries.
+     */
     private void viewProjectEnquiries() {
         BTOProject project = officer.getAssignedProject();
         if (project == null || !officer.isRegistrationApproved()) {
@@ -162,6 +185,9 @@ public class HDBOfficerMenu {
         }
     }
 
+    /**
+     * Displays and allows the officer to process applications for the assigned project.
+     */
     private void viewAndProcessApplications() {
         BTOProject project = officer.getAssignedProject();
         if (project == null || !officer.isRegistrationApproved()) {
@@ -214,6 +240,10 @@ public class HDBOfficerMenu {
         }
     }
 
+    /**
+     * Processes the status of a specific application.
+     * @param applications The list of applications to process
+     */
     private void processApplicationStatus(List<BTOApplication> applications) {
         System.out.print("Enter application number: ");
         int appNum = scanner.nextInt();
@@ -257,6 +287,10 @@ public class HDBOfficerMenu {
         }
     }
 
+    /**
+     * Processes withdrawal requests for applications.
+     * @param applications The list of applications to process
+     */
     private void processWithdrawalRequest(List<BTOApplication> applications) {
         System.out.print("Enter application number: ");
         int appNum = scanner.nextInt();
@@ -289,6 +323,10 @@ public class HDBOfficerMenu {
         }
     }
 
+    /**
+     * Processes flat bookings for applications.
+     * @param applications The list of applications to process
+     */
     private void processFlatBooking(List<BTOApplication> applications) {
         System.out.print("Enter application number: ");
         int appNum = scanner.nextInt();
@@ -317,6 +355,9 @@ public class HDBOfficerMenu {
         }
     }
 
+    /**
+     * Allows the HDB Officer to change their password.
+     */
     private void changePassword() {
         System.out.print("Enter current password: ");
         String oldPassword = scanner.nextLine();
@@ -329,4 +370,4 @@ public class HDBOfficerMenu {
             System.out.println("Failed to change password.");
         }
     }
-} 
+}

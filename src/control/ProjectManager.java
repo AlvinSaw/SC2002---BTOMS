@@ -1,3 +1,6 @@
+/**
+ * This package contains the control classes for managing the business logic of the BTO Management System.
+ */
 package control;
 
 import entity.*;
@@ -7,6 +10,9 @@ import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * ProjectManager class handles the management of BTO projects in the system.
+ */
 public class ProjectManager {
     private static ProjectManager instance;
     private List<BTOProject> projects;
@@ -17,6 +23,10 @@ public class ProjectManager {
         loadProjects();
     }
 
+    /**
+     * Returns the singleton instance of ProjectManager.
+     * @return The ProjectManager instance
+     */
     public static ProjectManager getInstance() {
         if (instance == null) {
             instance = new ProjectManager();
@@ -24,6 +34,9 @@ public class ProjectManager {
         return instance;
     }
 
+    /**
+     * Loads projects from the database file.
+     */
     private void loadProjects() {
         try (BufferedReader reader = new BufferedReader(new FileReader("database/projects.txt"))) {
             String line;
@@ -63,6 +76,9 @@ public class ProjectManager {
         }
     }
 
+    /**
+     * Saves all projects to the database file.
+     */
     public void saveProjects() {
         try (PrintWriter writer = new PrintWriter(new FileWriter("database/projects.txt"))) {
             for (BTOProject project : projects) {
@@ -93,10 +109,18 @@ public class ProjectManager {
         }
     }
 
+    /**
+     * Retrieves all projects in the system.
+     * @return A list of all BTOProjects
+     */
     public List<BTOProject> getAllProjects() {
         return new ArrayList<>(projects);
     }
 
+    /**
+     * Retrieves all visible projects in the system.
+     * @return A list of visible BTOProjects
+     */
     public List<BTOProject> getVisibleProjects() {
         List<BTOProject> visibleProjects = new ArrayList<>();
         for (BTOProject project : projects) {
@@ -107,6 +131,11 @@ public class ProjectManager {
         return visibleProjects;
     }
 
+    /**
+     * Retrieves visible projects eligible for a specific user.
+     * @param user The user to filter projects for
+     * @return A list of visible BTOProjects eligible for the user
+     */
     public List<BTOProject> getVisibleProjectsForUser(User user) {
         if (user instanceof Applicant) {
             List<BTOProject> eligibleProjects = new ArrayList<>();
@@ -135,6 +164,11 @@ public class ProjectManager {
         return getVisibleProjects();
     }
 
+    /**
+     * Retrieves a project by its name.
+     * @param projectName The name of the project
+     * @return The BTOProject if found, otherwise null
+     */
     public BTOProject getProject(String projectName) {
         for (BTOProject project : projects) {
             if (project.getProjectName().equals(projectName)) {
@@ -144,11 +178,20 @@ public class ProjectManager {
         return null;
     }
 
+    /**
+     * Adds a new project to the system.
+     * @param project The BTOProject to add
+     */
     public void addProject(BTOProject project) {
         projects.add(project);
         saveProjects();
     }
 
+    /**
+     * Deletes a project from the system.
+     * @param projectName The name of the project to delete
+     * @return True if the project is deleted successfully
+     */
     public boolean deleteProject(String projectName) {
         BTOProject project = getProject(projectName);
         if (project != null && project.getApplications().isEmpty()) {

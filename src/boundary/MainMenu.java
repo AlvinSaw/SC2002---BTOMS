@@ -1,3 +1,6 @@
+/**
+ * This package contains the boundary classes for the BTO Management System.
+ */
 package boundary;
 
 import control.*;
@@ -5,14 +8,24 @@ import entity.*;
 import java.util.Scanner;
 import java.io.*;
 
+/**
+ * MainMenu class provides the main entry point and user interface for the BTO Management System.
+ */
 public class MainMenu {
     private static Scanner scanner = new Scanner(System.in);
     private UserManager userManager;
 
+    /**
+     * Constructor for MainMenu.
+     * Initializes the UserManager instance.
+     */
     public MainMenu() {
         userManager = UserManager.getInstance();
     }
 
+    /**
+     * Starts the main menu loop for the application.
+     */
     public void start() {
         while (true) {
             if (userManager.getCurrentUser() == null) {
@@ -23,6 +36,9 @@ public class MainMenu {
         }
     }
 
+    /**
+     * Displays the login menu for the user.
+     */
     private void showLoginMenu() {
         System.out.println("\n=== BTO Management System ===");
         System.out.println("1. Login");
@@ -45,6 +61,9 @@ public class MainMenu {
         }
     }
 
+    /**
+     * Handles the login process for the user.
+     */
     private void login() {
         System.out.print("Enter NRIC: ");
         String nric = scanner.nextLine();
@@ -58,6 +77,9 @@ public class MainMenu {
         }
     }
 
+    /**
+     * Displays the main menu based on the current user's role.
+     */
     private void showMainMenu() {
         User currentUser = userManager.getCurrentUser();
         
@@ -70,6 +92,10 @@ public class MainMenu {
         }
     }
 
+    /**
+     * Main method to initialize the database and start the application.
+     * @param args Command-line arguments
+     */
     public static void main(String[] args) {
         new File("database").mkdirs();
         
