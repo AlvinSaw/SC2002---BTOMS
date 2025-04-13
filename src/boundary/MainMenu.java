@@ -4,6 +4,7 @@ import control.*;
 import entity.*;
 import java.util.Scanner;
 import java.io.*;
+import java.util.Arrays;
 
 public class MainMenu {
     private static Scanner scanner = new Scanner(System.in);
@@ -48,14 +49,52 @@ public class MainMenu {
     private void login() {
         System.out.print("Enter NRIC: ");
         String nric = scanner.nextLine();
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine();
+        
+        // Validate NRIC format before proceeding
+        if (!isValidNRIC(nric)) {
+            System.out.println("Invalid NRIC format. NRIC should be in the format 'S1234567A'.");
+            return;
+        }
+        
+        String password = readPassword();
         
         if (userManager.login(nric, password)) {
             System.out.println("Login successful!");
         } else {
             System.out.println("Invalid credentials. Please try again.");
         }
+    }
+
+    // Helper method to read password securely without displaying it
+    private String readPassword() {
+        Console console = System.console();
+        if (console != null) {
+            // If console is available, use it to read password securely
+            char[] passwordChars = console.readPassword("Enter password: ");
+            String password = new String(passwordChars);
+            Arrays.fill(passwordChars, ' '); // Clear the password from memory
+            return password;
+        } else {
+            // Fallback for environments where console is not available (e.g., some IDEs)
+            System.out.print("Enter password: ");
+            return scanner.nextLine();
+        }
+    }
+
+    // Helper method to validate NRIC format
+    private boolean isValidNRIC(String nric) {
+        // Singapore NRIC format: S/T followed by 7 digits and ending with a letter
+        if (nric == null || nric.length() != 9) return false;
+        
+        char first = nric.charAt(0);
+        char last = nric.charAt(8);
+        
+        // First character must be 'S' or 'T'
+        // Last character must be a letter
+        // Middle 7 characters must be digits
+        return (first == 'S' || first == 'T') && 
+               Character.isLetter(last) &&
+               nric.substring(1, 8).matches("\\d{7}");
     }
 
     private void showMainMenu() {

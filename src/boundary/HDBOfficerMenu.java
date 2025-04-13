@@ -234,13 +234,15 @@ public class HDBOfficerMenu extends ApplicantMenu {
             return;
         }
 
-        List<BTOApplication> applications = applicationManager.getApplicationsForProject(project.getProjectName());
-        if (applications.isEmpty()) {
-            System.out.println("No applications for this project.");
-            return;
-        }
+        boolean continueProcessing = true;
+        while (continueProcessing) {
+            // Refresh the list of applications each time through the loop
+            List<BTOApplication> applications = applicationManager.getApplicationsForProject(project.getProjectName());
+            if (applications.isEmpty()) {
+                System.out.println("No applications for this project.");
+                return;
+            }
 
-        while (true) {
             System.out.println("\nApplications:");
             for (int i = 0; i < applications.size(); i++) {
                 BTOApplication app = applications.get(i);
@@ -272,7 +274,8 @@ public class HDBOfficerMenu extends ApplicantMenu {
                     processFlatBooking(applications);
                     break;
                 case 4:
-                    return;
+                    continueProcessing = false;
+                    break;
                 default:
                     System.out.println("Invalid option. Please try again.");
             }
@@ -348,9 +351,19 @@ public class HDBOfficerMenu extends ApplicantMenu {
         if (choice == 1) {
             if (applicationManager.approveWithdrawal(application)) {
                 System.out.println("Withdrawal request approved successfully!");
+                System.out.println("The applicant can now apply for another project.");
             } else {
                 System.out.println("Failed to approve withdrawal request.");
             }
+        } else if (choice == 2) {
+            if (applicationManager.updateApplicationStatus(application, application.getStatus())) {
+                application.requestWithdrawal(); // Reset withdrawal request
+                System.out.println("Withdrawal request rejected.");
+            } else {
+                System.out.println("Failed to reject withdrawal request.");
+            }
+        } else {
+            System.out.println("Invalid option.");
         }
     }
 
@@ -381,4 +394,4 @@ public class HDBOfficerMenu extends ApplicantMenu {
             System.out.println("Failed to book flat.");
         }
     }
-} 
+}

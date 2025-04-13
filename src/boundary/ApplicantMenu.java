@@ -5,6 +5,7 @@ import entity.*;
 import enums.*;
 import java.util.*;
 import java.io.*;
+import java.time.format.DateTimeFormatter;
 
 public class ApplicantMenu {
     protected Scanner scanner = new Scanner(System.in);
@@ -140,14 +141,26 @@ public class ApplicantMenu {
         BTOApplication application = applicant.getCurrentApplication();
         if (application == null) {
             System.out.println("You have no active application.");
+            System.out.println("You can apply for a project by selecting 'View Available Projects' from the main menu.");
             return;
         }
+
+        // Define date formatter for better readability
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
+        String formattedDate = application.getApplicationDate().format(formatter);
 
         System.out.println("\nMy Application:");
         System.out.println("Project: " + application.getProject().getProjectName());
         System.out.println("Flat Type: " + application.getSelectedFlatType().getDisplayName());
         System.out.println("Status: " + application.getStatus());
-        System.out.println("Application Date: " + application.getApplicationDate());
+        System.out.println("Application Date: " + formattedDate);
+        
+        if (application.isWithdrawalRequested()) {
+            System.out.println("\nWithdrawal Request Status: PENDING");
+            System.out.println("Your withdrawal request has been submitted and is awaiting approval.");
+            System.out.println("Once approved, you will be able to apply for another project.");
+            return;
+        }
 
         if (!application.isWithdrawalRequested() && application.getStatus() != ApplicationStatus.BOOKED) {
             System.out.print("\nWould you like to request withdrawal? (Y/N): ");
@@ -156,6 +169,7 @@ public class ApplicantMenu {
             if (choice.equalsIgnoreCase("Y")) {
                 if (applicationManager.requestWithdrawal(application)) {
                     System.out.println("Withdrawal request submitted successfully!");
+                    System.out.println("Once approved, you will be able to apply for another project.");
                 } else {
                     System.out.println("Failed to submit withdrawal request.");
                 }
@@ -264,4 +278,4 @@ public class ApplicantMenu {
             System.out.println("Failed to change password.");
         }
     }
-} 
+}
