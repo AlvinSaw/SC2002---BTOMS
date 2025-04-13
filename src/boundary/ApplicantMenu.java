@@ -1,39 +1,18 @@
-/**
- * This package contains the boundary classes for the BTO Management System.
- */
 package boundary;
 
 import control.*;
-import // The `entity` package in the code is used to store classes that represent entities or objects
-// within the system. These classes typically contain attributes and methods that define the
-// properties and behavior of the entities in the application. In this specific code snippet,
-// the `entity` package might contain classes like `Applicant`, `BTOProject`, `FlatType`,
-// `BTOApplication`, and possibly others that represent entities such as applicants, BTO
-// projects, flat types, and applications within the BTO Management System.
-// The above code is importing all classes from the "entity" package in Java.
-entity.*;
-// The above code is importing an enum package in Java. It seems like the code snippet is incomplete
-// and the actual usage of the imported enums is not shown. Enums in Java are used to define a set of
-// named constants.
+import entity.*;
 import enums.*;
 import java.util.*;
 import java.io.*;
 
-/**
- * ApplicantMenu class provides the user interface for applicants in the BTO Management System.
- */
 public class ApplicantMenu {
-    private Scanner scanner = new Scanner(System.in);
-    private Applicant applicant;
-    private ProjectManager projectManager;
-    private ApplicationManager applicationManager;
-    private EnquiryManager enquiryManager;
+    protected Scanner scanner = new Scanner(System.in);
+    protected Applicant applicant;
+    protected ProjectManager projectManager;
+    protected ApplicationManager applicationManager;
+    protected EnquiryManager enquiryManager;
 
-    /**
-     * Constructor for ApplicantMenu.
-     * Initializes the menu with the given applicant and managers.
-     * @param applicant The applicant using the menu
-     */
     public ApplicantMenu(Applicant applicant) {
         this.applicant = applicant;
         this.projectManager = ProjectManager.getInstance();
@@ -41,9 +20,6 @@ public class ApplicantMenu {
         this.enquiryManager = EnquiryManager.getInstance();
     }
 
-    /**
-     * Displays the applicant menu and handles user interactions.
-     */
     public void show() {
         while (true) {
             System.out.println("\n=== Applicant Menu ===");
@@ -83,10 +59,7 @@ public class ApplicantMenu {
         }
     }
 
-    /**
-     * Displays available BTO projects for the applicant.
-     */
-    private void viewAvailableProjects() {
+    protected void viewAvailableProjects() {
         List<BTOProject> projects = projectManager.getVisibleProjectsForUser(applicant);
         if (projects.isEmpty()) {
             System.out.println("No available projects found.");
@@ -109,11 +82,7 @@ public class ApplicantMenu {
         }
     }
 
-    /**
-     * Displays detailed information about a specific BTO project.
-     * @param project The project to view details for
-     */
-    private void viewProjectDetails(BTOProject project) {
+    protected void viewProjectDetails(BTOProject project) {
         System.out.println("\nProject Details:");
         System.out.println("Name: " + project.getProjectName());
         System.out.println("Neighborhood: " + project.getNeighborhood());
@@ -137,11 +106,7 @@ public class ApplicantMenu {
         }
     }
 
-    /**
-     * Allows the applicant to apply for a specific BTO project.
-     * @param project The project to apply for
-     */
-    private void applyForProject(BTOProject project) {
+    protected void applyForProject(BTOProject project) {
         System.out.println("\nSelect Flat Type:");
         List<FlatType> availableTypes = new ArrayList<>();
         
@@ -171,10 +136,7 @@ public class ApplicantMenu {
         }
     }
 
-    /**
-     * Displays the applicant's current application details.
-     */
-    private void viewMyApplication() {
+    protected void viewMyApplication() {
         BTOApplication application = applicant.getCurrentApplication();
         if (application == null) {
             System.out.println("You have no active application.");
@@ -201,10 +163,7 @@ public class ApplicantMenu {
         }
     }
 
-    /**
-     * Displays the applicant's enquiries and allows management of them.
-     */
-    private void viewMyEnquiries() {
+    protected void viewMyEnquiries() {
         List<Enquiry> enquiries = enquiryManager.getEnquiriesForUser(applicant.getNric());
         if (enquiries.isEmpty()) {
             System.out.println("You have no enquiries.");
@@ -230,10 +189,6 @@ public class ApplicantMenu {
         }
     }
 
-    /**
-     * Allows the applicant to manage a specific enquiry.
-     * @param enquiry The enquiry to manage
-     */
     private void manageEnquiry(Enquiry enquiry) {
         if (enquiry.hasReply()) {
             System.out.println("Cannot modify enquiry after it has been replied to.");
@@ -268,10 +223,7 @@ public class ApplicantMenu {
         }
     }
 
-    /**
-     * Allows the applicant to create a new enquiry for a project.
-     */
-    private void createNewEnquiry() {
+    protected void createNewEnquiry() {
         List<BTOProject> projects = projectManager.getVisibleProjects();
         if (projects.isEmpty()) {
             System.out.println("No projects available.");
@@ -300,10 +252,7 @@ public class ApplicantMenu {
         }
     }
 
-    /**
-     * Allows the applicant to change their password.
-     */
-    private void changePassword() {
+    protected void changePassword() {
         System.out.print("Enter current password: ");
         String oldPassword = scanner.nextLine();
         System.out.print("Enter new password: ");
@@ -315,4 +264,4 @@ public class ApplicantMenu {
             System.out.println("Failed to change password.");
         }
     }
-}
+} 

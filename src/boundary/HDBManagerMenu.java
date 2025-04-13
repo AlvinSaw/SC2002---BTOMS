@@ -1,6 +1,3 @@
-/**
- * This package contains the boundary classes for the BTO Management System.
- */
 package boundary;
 
 import control.*;
@@ -11,9 +8,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
-/**
- * HDBManagerMenu class provides the user interface for HDB Managers in the BTO Management System.
- */
 public class HDBManagerMenu {
     private Scanner scanner = new Scanner(System.in);
     private HDBManager manager;
@@ -22,11 +16,6 @@ public class HDBManagerMenu {
     private EnquiryManager enquiryManager;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    /**
-     * Constructor for HDBManagerMenu.
-     * Initializes the menu with the given manager and managers.
-     * @param manager The HDB Manager using the menu
-     */
     public HDBManagerMenu(HDBManager manager) {
         this.manager = manager;
         this.projectManager = ProjectManager.getInstance();
@@ -34,9 +23,6 @@ public class HDBManagerMenu {
         this.enquiryManager = EnquiryManager.getInstance();
     }
 
-    /**
-     * Displays the HDB Manager menu and handles user interactions.
-     */
     public void show() {
         while (true) {
             System.out.println("\n=== HDB Manager Menu ===");
@@ -88,12 +74,9 @@ public class HDBManagerMenu {
         }
     }
 
-    /**
-     * Allows the HDB Manager to create a new BTO project.
-     */
     private void createNewProject() {
         System.out.print("Enter project name: ");
-        String projectName = scanner.nextLine();
+        String name = scanner.nextLine();
         
         System.out.print("Enter neighborhood: ");
         String neighborhood = scanner.nextLine();
@@ -102,13 +85,14 @@ public class HDBManagerMenu {
         for (FlatType type : FlatType.values()) {
             System.out.printf("Enter number of %s units: ", type.getDisplayName());
             int units = scanner.nextInt();
+            scanner.nextLine();
             flatUnits.put(type, units);
         }
-        scanner.nextLine();
         
         LocalDate openDate = null;
+        LocalDate closeDate = null;
         while (openDate == null) {
-            System.out.print("Enter application opening date (yyyy-MM-dd): ");
+            System.out.print("Enter application open date (yyyy-MM-dd): ");
             try {
                 openDate = LocalDate.parse(scanner.nextLine(), DATE_FORMAT);
             } catch (DateTimeParseException e) {
@@ -116,13 +100,12 @@ public class HDBManagerMenu {
             }
         }
         
-        LocalDate closeDate = null;
         while (closeDate == null) {
-            System.out.print("Enter application closing date (yyyy-MM-dd): ");
+            System.out.print("Enter application close date (yyyy-MM-dd): ");
             try {
                 closeDate = LocalDate.parse(scanner.nextLine(), DATE_FORMAT);
                 if (closeDate.isBefore(openDate)) {
-                    System.out.println("Closing date must be after opening date.");
+                    System.out.println("Close date must be after open date.");
                     closeDate = null;
                 }
             } catch (DateTimeParseException e) {
@@ -130,87 +113,62 @@ public class HDBManagerMenu {
             }
         }
         
-        BTOProject project = new BTOProject(projectName, neighborhood, flatUnits, openDate, closeDate, manager);
-        projectManager.addProject(project);
-        System.out.println("Project created successfully!");
+        BTOProject project = new BTOProject(name, neighborhood, flatUnits, openDate, closeDate, manager);
+        if (manager.canHandleNewProject(project)) {
+            projectManager.addProject(project);
+            manager.addCreatedProject(project);
+            System.out.println("Project created successfully!");
+        } else {
+            System.out.println("Cannot create project: Application period overlaps with existing project.");
+        }
     }
 
-    /**
-     * Displays all BTO projects in the system.
-     */
     private void viewAllProjects() {
         List<BTOProject> projects = projectManager.getAllProjects();
-        displayProjects(projects);
-    }
-
-    /**
-     * Displays the projects created by the HDB Manager.
-     */
-    private void viewMyProjects() {
-        List<BTOProject> projects = manager.getCreatedProjects();
-        displayProjects(projects);
-    }
-
-    /**
-     * Displays a list of projects and provides options to view details or toggle visibility.
-     * @param projects The list of projects to display
-     */
-    private void displayProjects(List<BTOProject> projects) {
         if (projects.isEmpty()) {
-            System.out.println("No projects found.");
+            System.out.println("No projects available.");
             return;
         }
 
-        while (true) {
-            System.out.println("\nProjects:");
-            for (int i = 0; i < projects.size(); i++) {
-                BTOProject project = projects.get(i);
-                System.out.printf("%d. %s (%s) - %s%n",
-                    i + 1,
-                    project.getProjectName(),
-                    project.getNeighborhood(),
-                    project.isVisible() ? "Visible" : "Hidden");
-            }
+        System.out.println("\nAll Projects:");
+        for (int i = 0; i < projects.size(); i++) {
+            BTOProject project = projects.get(i);
+            System.out.printf("%d. %s (%s)%n", i + 1, project.getProjectName(), project.getNeighborhood());
+        }
 
-            System.out.println("\n1. View Project Details");
-            System.out.println("2. Toggle Project Visibility");
-            System.out.println("3. Go Back");
-            System.out.print("Choose an option: ");
-            
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+        System.out.print("Enter project number to view details (0 to go back): ");
+        int choice = scanner.nextInt();
+        scanner.nextLine();
 
-            if (choice == 3) break;
-
-            System.out.print("Enter project number: ");
-            int projectNum = scanner.nextInt();
-            scanner.nextLine();
-
-            if (projectNum < 1 || projectNum > projects.size()) {
-                System.out.println("Invalid project number.");
-                continue;
-            }
-
-            BTOProject selected = projects.get(projectNum - 1);
-            switch (choice) {
-                case 1:
-                    viewProjectDetails(selected);
-                    break;
-                case 2:
-                    selected.setVisible(!selected.isVisible());
-                    projectManager.saveProjects();
-                    System.out.println("Project visibility toggled successfully!");
-                    break;
-                default:
-                    System.out.println("Invalid option.");
-            }
+        if (choice > 0 && choice <= projects.size()) {
+            BTOProject selected = projects.get(choice - 1);
+            viewProjectDetails(selected);
         }
     }
 
-    /**
-     * Displays detailed information about a specific BTO project.
-     * @param project The project to view details for
-     */
+    private void viewMyProjects() {
+        List<BTOProject> projects = manager.getCreatedProjects();
+        if (projects.isEmpty()) {
+            System.out.println("You have no projects.");
+            return;
+        }
+
+        System.out.println("\nMy Projects:");
+        for (int i = 0; i < projects.size(); i++) {
+            BTOProject project = projects.get(i);
+            System.out.printf("%d. %s (%s)%n", i + 1, project.getProjectName(), project.getNeighborhood());
+        }
+
+        System.out.print("Enter project number to view details (0 to go back): ");
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+
+        if (choice > 0 && choice <= projects.size()) {
+            BTOProject selected = projects.get(choice - 1);
+            viewProjectDetails(selected);
+        }
+    }
+
     private void viewProjectDetails(BTOProject project) {
         System.out.println("\nProject Details:");
         System.out.println("Name: " + project.getProjectName());
@@ -238,11 +196,27 @@ public class HDBManagerMenu {
                     officer.isRegistrationApproved() ? "Approved" : "Pending");
             }
         }
+
+        System.out.println("\n1. Toggle Project Visibility");
+        System.out.println("2. Go Back");
+        System.out.print("Choose an option: ");
+        
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+
+        switch (choice) {
+            case 1:
+                project.setVisible(!project.isVisible());
+                projectManager.saveProjects();
+                System.out.println("Project visibility toggled successfully!");
+                break;
+            case 2:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
     }
 
-    /**
-     * Displays applications for a specific project created by the HDB Manager.
-     */
     private void viewProjectApplications() {
         List<BTOProject> projects = manager.getCreatedProjects();
         if (projects.isEmpty()) {
@@ -282,13 +256,10 @@ public class HDBManagerMenu {
         }
     }
 
-    /**
-     * Displays enquiries for a specific project.
-     */
     private void viewProjectEnquiries() {
-        List<BTOProject> projects = projectManager.getAllProjects();
+        List<BTOProject> projects = manager.getCreatedProjects();
         if (projects.isEmpty()) {
-            System.out.println("No projects found.");
+            System.out.println("You have no projects.");
             return;
         }
 
@@ -323,9 +294,6 @@ public class HDBManagerMenu {
         }
     }
 
-    /**
-     * Manages officer registrations for a specific project.
-     */
     private void manageOfficerRegistrations() {
         List<BTOProject> projects = manager.getCreatedProjects();
         if (projects.isEmpty()) {
@@ -394,9 +362,6 @@ public class HDBManagerMenu {
         }
     }
 
-    /**
-     * Generates various reports for a specific project.
-     */
     private void generateReports() {
         List<BTOProject> projects = manager.getCreatedProjects();
         if (projects.isEmpty()) {
@@ -454,10 +419,6 @@ public class HDBManagerMenu {
         }
     }
 
-    /**
-     * Generates a report of all applications for a project.
-     * @param applications The list of applications to include in the report
-     */
     private void generateAllApplicationsReport(List<BTOApplication> applications) {
         System.out.printf("Total Applications: %d%n%n", applications.size());
         for (BTOApplication app : applications) {
@@ -465,10 +426,6 @@ public class HDBManagerMenu {
         }
     }
 
-    /**
-     * Generates a report of successful applications for a project.
-     * @param applications The list of applications to include in the report
-     */
     private void generateSuccessfulApplicationsReport(List<BTOApplication> applications) {
         List<BTOApplication> successful = new ArrayList<>();
         for (BTOApplication app : applications) {
@@ -483,10 +440,6 @@ public class HDBManagerMenu {
         }
     }
 
-    /**
-     * Generates a report of booked flats for a project.
-     * @param applications The list of applications to include in the report
-     */
     private void generateBookedFlatsReport(List<BTOApplication> applications) {
         List<BTOApplication> booked = new ArrayList<>();
         for (BTOApplication app : applications) {
@@ -501,48 +454,30 @@ public class HDBManagerMenu {
         }
     }
 
-    /**
-     * Generates a report of applications grouped by flat type.
-     * @param applications The list of applications to include in the report
-     */
     private void generateApplicationsByFlatTypeReport(List<BTOApplication> applications) {
-        Map<FlatType, List<BTOApplication>> byType = new HashMap<>();
+        Map<FlatType, Integer> counts = new HashMap<>();
         for (BTOApplication app : applications) {
-            byType.computeIfAbsent(app.getSelectedFlatType(), k -> new ArrayList<>()).add(app);
+            counts.merge(app.getSelectedFlatType(), 1, Integer::sum);
         }
-
-        for (Map.Entry<FlatType, List<BTOApplication>> entry : byType.entrySet()) {
-            System.out.printf("%s Applications: %d%n", entry.getKey().getDisplayName(), entry.getValue().size());
-            for (BTOApplication app : entry.getValue()) {
-                printApplicationDetails(app);
-            }
-            System.out.println();
+        
+        System.out.println("Applications by Flat Type:");
+        for (Map.Entry<FlatType, Integer> entry : counts.entrySet()) {
+            System.out.printf("%s: %d applications%n", entry.getKey().getDisplayName(), entry.getValue());
         }
     }
 
-    /**
-     * Generates a report of applications grouped by marital status.
-     * @param applications The list of applications to include in the report
-     */
     private void generateApplicationsByMaritalStatusReport(List<BTOApplication> applications) {
-        Map<MaritalStatus, List<BTOApplication>> byStatus = new HashMap<>();
+        Map<MaritalStatus, Integer> counts = new HashMap<>();
         for (BTOApplication app : applications) {
-            byStatus.computeIfAbsent(app.getApplicant().getMaritalStatus(), k -> new ArrayList<>()).add(app);
+            counts.merge(app.getApplicant().getMaritalStatus(), 1, Integer::sum);
         }
-
-        for (Map.Entry<MaritalStatus, List<BTOApplication>> entry : byStatus.entrySet()) {
-            System.out.printf("%s Applications: %d%n", entry.getKey(), entry.getValue().size());
-            for (BTOApplication app : entry.getValue()) {
-                printApplicationDetails(app);
-            }
-            System.out.println();
+        
+        System.out.println("Applications by Marital Status:");
+        for (Map.Entry<MaritalStatus, Integer> entry : counts.entrySet()) {
+            System.out.printf("%s: %d applications%n", entry.getKey(), entry.getValue());
         }
     }
 
-    /**
-     * Prints the details of a specific application.
-     * @param app The application to print details for
-     */
     private void printApplicationDetails(BTOApplication app) {
         System.out.printf("NRIC: %s%n", app.getApplicant().getNric());
         System.out.printf("Age: %d%n", app.getApplicant().getAge());
@@ -553,9 +488,6 @@ public class HDBManagerMenu {
         System.out.println();
     }
 
-    /**
-     * Allows the HDB Manager to change their password.
-     */
     private void changePassword() {
         System.out.print("Enter current password: ");
         String oldPassword = scanner.nextLine();
@@ -568,4 +500,4 @@ public class HDBManagerMenu {
             System.out.println("Failed to change password.");
         }
     }
-}
+} 

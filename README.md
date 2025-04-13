@@ -29,12 +29,14 @@ This is a command line application for managing HDB BTO projects. The system all
 ```
 .
 ├── src/
-│   ├── boundary
-│   ├── control
-│   ├── entity
-│   └── enums
-├── database
+│   ├── boundary/      # UI and menu classes
+│   ├── control/       # Business logic and managers
+│   ├── entity/        # Data model classes
+│   ├── enums/         # Enumeration types
+│   └── utils/         # Utility classes
+├── database/
 │   ├── users.txt
+│   ├── users.txt.bak
 │   ├── projects.txt
 │   ├── applications.txt
 │   └── enquiries.txt
@@ -45,12 +47,12 @@ This is a command line application for managing HDB BTO projects. The system all
 
 ### users.txt
 ```
-NRIC,password,age,marital_status,user_type
+NRIC,hashed_password,age,marital_status,user_type
 ```
 
 ### projects.txt
 ```
-project_name|neighborhood|flat_units|open_date|close_date|manager_nric|visibility|officers
+project_name|neighborhood|flat_units|open_date|close_date|manager_nric|visibility|max_officer_slots|officers
 ```
 
 ### applications.txt
@@ -63,7 +65,17 @@ applicant_nric|project_name|flat_type|status|withdrawal_requested
 id|creator_nric|project_name|content|reply
 ```
 
+## Security Features
+- Password hashing using SHA-256 with salt
+- Password migration tool for initializing passwords
+
 ## Run Program
 ```bash
 java src.boundary.MainMenu
+```
+
+## Password Migration
+To initialize user passwords to hashed format:
+```bash
+java src.utils.PasswordMigrationTool
 ```
