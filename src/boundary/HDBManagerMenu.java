@@ -147,7 +147,7 @@ public class HDBManagerMenu {
     }
 
     private void viewMyProjects() {
-        List<BTOProject> projects = manager.getCreatedProjects();
+        List<BTOProject> projects = manager.getManagedProjects();
         if (projects.isEmpty()) {
             System.out.println("You have no projects.");
             return;
@@ -218,7 +218,7 @@ public class HDBManagerMenu {
     }
 
     private void viewProjectApplications() {
-        List<BTOProject> projects = manager.getCreatedProjects();
+        List<BTOProject> projects = manager.getManagedProjects();
         if (projects.isEmpty()) {
             System.out.println("You have no projects.");
             return;
@@ -257,7 +257,7 @@ public class HDBManagerMenu {
     }
 
     private void viewProjectEnquiries() {
-        List<BTOProject> projects = manager.getCreatedProjects();
+        List<BTOProject> projects = manager.getManagedProjects();
         if (projects.isEmpty()) {
             System.out.println("You have no projects.");
             return;
@@ -295,7 +295,7 @@ public class HDBManagerMenu {
     }
 
     private void manageOfficerRegistrations() {
-        List<BTOProject> projects = manager.getCreatedProjects();
+        List<BTOProject> projects = manager.getManagedProjects();
         if (projects.isEmpty()) {
             System.out.println("You have no projects.");
             return;
@@ -363,7 +363,7 @@ public class HDBManagerMenu {
     }
 
     private void generateReports() {
-        List<BTOProject> projects = manager.getCreatedProjects();
+        List<BTOProject> projects = manager.getManagedProjects();
         if (projects.isEmpty()) {
             System.out.println("You have no projects.");
             return;

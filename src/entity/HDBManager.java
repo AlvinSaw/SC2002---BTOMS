@@ -2,10 +2,12 @@ package entity;
 
 import enums.MaritalStatus;
 import enums.UserType;
+import entity.interfaces.IProjectManageable;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
 
-public class HDBManager extends User {
+public class HDBManager extends User implements IProjectManageable {
     private List<BTOProject> createdProjects;
     private BTOProject currentProject;
 
@@ -15,7 +17,8 @@ public class HDBManager extends User {
         this.currentProject = null;
     }
 
-    public List<BTOProject> getCreatedProjects() {
+    @Override
+    public List<BTOProject> getManagedProjects() {
         return new ArrayList<>(createdProjects);
     }
 
@@ -29,6 +32,39 @@ public class HDBManager extends User {
 
     public void setCurrentProject(BTOProject project) {
         this.currentProject = project;
+    }
+
+    @Override
+    public boolean canCreateProject(BTOProject project) {
+        // Check if project name is unique
+        if (!isProjectNameUnique(project.getProjectName())) {
+            return false;
+        }
+
+        // Check if there is an ongoing project
+        if (currentProject != null) {
+            return false;
+        }
+
+        // Check if project dates are valid
+        LocalDate now = LocalDate.now();
+        return !project.getApplicationOpenDate().isBefore(now) &&
+               !project.getApplicationCloseDate().isBefore(project.getApplicationOpenDate());
+    }
+
+    @Override
+    public boolean canUpdateProjectVisibility(BTOProject project) {
+        return createdProjects.contains(project);
+    }
+
+    @Override
+    public boolean isProjectNameUnique(String projectName) {
+        for (BTOProject project : createdProjects) {
+            if (project.getProjectName().equals(projectName)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean canHandleNewProject(BTOProject newProject) {
