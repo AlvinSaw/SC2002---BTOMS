@@ -24,14 +24,17 @@ public class PasswordMigrationTool {
                     int age = Integer.parseInt(parts[2]);
                     MaritalStatus maritalStatus = MaritalStatus.valueOf(parts[3]);
                     UserType userType = UserType.valueOf(parts[4]);
+                    String name = parts.length > 5 ? parts[5] : "";
 
                     String hashedPassword = PasswordHasher.hashPassword(oldPassword);
-                    writer.println(String.format("%s,%s,%d,%s,%s",
-                        nric,
-                        hashedPassword,
-                        age,
-                        maritalStatus,
-                        userType));
+                    writer.println(String.format("%s,%s,%d,%s,%s,%s",
+                            nric,
+                            hashedPassword,
+                            age,
+                            maritalStatus,
+                            userType,
+                            name));
+
                 }
             }
 

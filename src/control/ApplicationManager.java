@@ -103,12 +103,9 @@ public class ApplicationManager {
     }
 
     public boolean requestWithdrawal(BTOApplication application) {
-        if (application.getStatus() != ApplicationStatus.BOOKED) {
-            application.requestWithdrawal();
-            saveApplications();
-            return true;
-        }
-        return false;
+        application.requestWithdrawal();
+        saveApplications();
+        return true;
     }
 
     public boolean approveWithdrawal(BTOApplication application) {
@@ -130,5 +127,38 @@ public class ApplicationManager {
             return true;
         }
         return false;
+    }
+
+    public String generateReceipt(BTOApplication application, HDBOfficer officer) {
+        if (application.getStatus() != ApplicationStatus.BOOKED) {
+            return "Can only generate receipts for booked applications.";
+        }
+
+        if (officer == null) {
+            // If the applicant requests to generate a receipt
+            StringBuilder receipt = new StringBuilder();
+            receipt.append("=== HDB BTO Application Receipt ===\n");
+            receipt.append("Date: ").append(LocalDateTime.now().format(DATE_FORMAT)).append("\n\n");
+            
+            receipt.append("Applicant Details:\n");
+            receipt.append("Name: ").append(application.getApplicant().getName()).append("\n");
+            receipt.append("NRIC: ").append(application.getApplicant().getNric()).append("\n");
+            receipt.append("Age: ").append(application.getApplicant().getAge()).append("\n");
+            receipt.append("Marital Status: ").append(application.getApplicant().getMaritalStatus()).append("\n\n");
+            
+            receipt.append("Flat Details:\n");
+            receipt.append("Project: ").append(application.getProject().getProjectName()).append("\n");
+            receipt.append("Neighborhood: ").append(application.getProject().getNeighborhood()).append("\n");
+            receipt.append("Flat Type: ").append(application.getSelectedFlatType().getDisplayName()).append("\n\n");
+            
+            receipt.append("Booking Details:\n");
+            receipt.append("Application Date: ").append(application.getApplicationDate().format(DATE_FORMAT)).append("\n");
+            receipt.append("Status: ").append(application.getStatus()).append("\n");
+            
+            return receipt.toString();
+        } else if (officer.canGenerateReceipt(application)) {
+            return officer.generateReceipt(application);
+        }
+        return "Cannot generate receipt for this application.";
     }
 }

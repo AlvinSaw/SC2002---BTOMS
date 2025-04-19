@@ -27,28 +27,24 @@ public class UserManager {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                String nric = parts[0];
-                String hashedPassword = parts[1];
-                int age = Integer.parseInt(parts[2]);
-                MaritalStatus maritalStatus = MaritalStatus.valueOf(parts[3]);
+                User user = null;
                 UserType userType = UserType.valueOf(parts[4]);
-
-                User user;
-                switch (userType) {
-                    case APPLICANT:
-                        user = new Applicant(nric, "", age, maritalStatus);
-                        break;
-                    case HDB_OFFICER:
-                        user = new HDBOfficer(nric, "", age, maritalStatus);
-                        break;
-                    case HDB_MANAGER:
-                        user = new HDBManager(nric, "", age, maritalStatus);
-                        break;
-                    default:
-                        continue;
+                
+                if (userType == UserType.APPLICANT) {
+                    user = new Applicant(parts[0], "", Integer.parseInt(parts[2]), 
+                        MaritalStatus.valueOf(parts[3]), parts[5]);
+                } else if (userType == UserType.HDB_OFFICER) {
+                    user = new HDBOfficer(parts[0], parts[1], Integer.parseInt(parts[2]), 
+                        MaritalStatus.valueOf(parts[3]),
+                        parts[5]);
+                } else if (userType == UserType.HDB_MANAGER) {
+                    user = new HDBManager(parts[0], "", Integer.parseInt(parts[2]), 
+                        MaritalStatus.valueOf(parts[3]));
                 }
-                user.setPassword(hashedPassword);
-                users.put(nric, user);
+                if (user != null) {
+                    user.setPassword(parts[1]);
+                    users.put(parts[0], user);
+                }
             }
         } catch (IOException e) {
             System.err.println("Error loading users: " + e.getMessage());
@@ -86,18 +82,45 @@ public class UserManager {
         return users.get(nric);
     }
 
-    private void saveUsers() {
+    public void saveUsers() {
         try (PrintWriter writer = new PrintWriter(new FileWriter("database/users.txt"))) {
             for (User user : users.values()) {
-                writer.println(String.format("%s,%s,%d,%s,%s",
-                    user.getNric(),
-                    user.getPassword(),
-                    user.getAge(),
-                    user.getMaritalStatus(),
-                    user.getUserType()));
+                if (user instanceof Applicant) {
+                    writer.printf("%s,%s,%d,%s,%s,%s%n",
+                            user.getNric(), user.getPassword(), user.getAge(),
+                            user.getMaritalStatus(), user.getUserType(), user.getName());
+                } else {
+                    writer.printf("%s,%s,%d,%s,%s,%s%n",
+                            user.getNric(), user.getPassword(), user.getAge(),
+                            user.getMaritalStatus(), user.getUserType(), user.getName());
+                }
             }
         } catch (IOException e) {
             System.err.println("Error saving users: " + e.getMessage());
         }
+    }
+
+    public boolean register(String nric, String password, int age, MaritalStatus maritalStatus, UserType userType, String name) {
+        if (users.containsKey(nric)) {
+            return false;
+        }
+
+        User user = null;
+        if (userType == UserType.APPLICANT) {
+            user = new Applicant(nric, "", age, maritalStatus, name);
+        } else if (userType == UserType.HDB_OFFICER) {
+            user = new HDBOfficer(nric, "", age, maritalStatus, name);
+        } else if (userType == UserType.HDB_MANAGER) {
+            user = new HDBManager(nric, "", age, maritalStatus);
+            user.setName(name);
+        }
+
+        if (user != null) {
+            user.setPassword(password, true);
+            users.put(nric, user);
+            saveUsers();
+            return true;
+        }
+        return false;
     }
 } 

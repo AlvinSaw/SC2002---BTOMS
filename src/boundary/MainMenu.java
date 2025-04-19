@@ -25,24 +25,31 @@ public class MainMenu {
     }
 
     private void showLoginMenu() {
-        System.out.println("\n=== BTO Management System ===");
-        System.out.println("1. Login");
-        System.out.println("2. Exit");
-        System.out.print("Choose an option: ");
-        
-        int choice = scanner.nextInt();
-        scanner.nextLine();
-        
-        switch (choice) {
-            case 1:
-                login();
-                break;
-            case 2:
-                System.out.println("Thank you for using BTO Management System!");
-                System.exit(0);
-                break;
-            default:
-                System.out.println("Invalid option. Please try again.");
+        while (true) {
+            System.out.println("\n=== BTO Management System ===");
+            System.out.println("1. Login");
+            System.out.println("2. Exit");
+            System.out.print("Choose an option: ");
+            
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Clear the newline character
+                
+                switch (choice) {
+                    case 1:
+                        login();
+                        return;
+                    case 2:
+                        System.out.println("Thank you for using BTO Management System!");
+                        System.exit(0);
+                        break;
+                    default:
+                        System.out.println("Invalid option. Please enter 1 or 2.");
+                }
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a number (1 or 2).");
+                scanner.nextLine(); // Clear invalid input
+            }
         }
     }
 
@@ -59,7 +66,11 @@ public class MainMenu {
         String password = readPassword();
         
         if (userManager.login(nric, password)) {
-            System.out.println("Login successful!");
+            User currentUser = userManager.getCurrentUser();
+            System.out.println("\n=== Welcome to BTO Management System ===");
+            System.out.println("Welcome, " + currentUser.getName() + "!");
+            System.out.println("Role: " + currentUser.getUserType());
+            System.out.println("=====================================");
         } else {
             System.out.println("Invalid credentials. Please try again.");
         }

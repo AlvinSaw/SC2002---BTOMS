@@ -7,23 +7,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
 
-public class HDBManager extends User implements IProjectManageable {
-    private List<BTOProject> createdProjects;
+public class HDBManager extends Applicant implements IProjectManageable {
+    private List<BTOProject> managedProjects;
     private BTOProject currentProject;
 
     public HDBManager(String nric, String password, int age, MaritalStatus maritalStatus) {
-        super(nric, password, age, maritalStatus, UserType.HDB_MANAGER);
-        this.createdProjects = new ArrayList<>();
+        super(nric, password, age, maritalStatus, "HDB Manager");
+        this.managedProjects = new ArrayList<>();
         this.currentProject = null;
     }
 
     @Override
     public List<BTOProject> getManagedProjects() {
-        return new ArrayList<>(createdProjects);
+        return new ArrayList<>(managedProjects);
     }
 
     public void addCreatedProject(BTOProject project) {
-        this.createdProjects.add(project);
+        this.managedProjects.add(project);
     }
 
     public BTOProject getCurrentProject() {
@@ -54,12 +54,12 @@ public class HDBManager extends User implements IProjectManageable {
 
     @Override
     public boolean canUpdateProjectVisibility(BTOProject project) {
-        return createdProjects.contains(project);
+        return managedProjects.contains(project);
     }
 
     @Override
     public boolean isProjectNameUnique(String projectName) {
-        for (BTOProject project : createdProjects) {
+        for (BTOProject project : managedProjects) {
             if (project.getProjectName().equals(projectName)) {
                 return false;
             }

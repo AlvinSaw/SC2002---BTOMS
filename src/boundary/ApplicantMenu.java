@@ -13,12 +13,14 @@ public class ApplicantMenu {
     protected ProjectManager projectManager;
     protected ApplicationManager applicationManager;
     protected EnquiryManager enquiryManager;
+    protected UserManager userManager;
 
     public ApplicantMenu(Applicant applicant) {
         this.applicant = applicant;
         this.projectManager = ProjectManager.getInstance();
         this.applicationManager = ApplicationManager.getInstance();
         this.enquiryManager = EnquiryManager.getInstance();
+        this.userManager = UserManager.getInstance();
     }
 
     public void show() {
@@ -28,8 +30,9 @@ public class ApplicantMenu {
             System.out.println("2. View My Application");
             System.out.println("3. View My Enquiries");
             System.out.println("4. Create New Enquiry");
-            System.out.println("5. Change Password");
-            System.out.println("6. Logout");
+            System.out.println("5. Generate Receipt");
+            System.out.println("6. Change Password");
+            System.out.println("7. Logout");
             System.out.print("Choose an option: ");
             
             int choice = scanner.nextInt();
@@ -49,9 +52,12 @@ public class ApplicantMenu {
                     createNewEnquiry();
                     break;
                 case 5:
-                    changePassword();
+                    generateReceipt();
                     break;
                 case 6:
+                    changePassword();
+                    break;
+                case 7:
                     UserManager.getInstance().logout();
                     return;
                 default:
@@ -276,6 +282,61 @@ public class ApplicantMenu {
             System.out.println("Password changed successfully!");
         } else {
             System.out.println("Failed to change password.");
+        }
+    }
+
+    protected void generateReceipt() {
+        BTOApplication application = applicant.getCurrentApplication();
+        if (application == null) {
+            System.out.println("You have no active application.");
+            return;
+        }
+
+        if (application.getStatus() != ApplicationStatus.BOOKED) {
+            System.out.println("Can only generate receipts for booked applications.");
+            return;
+        }
+
+        String receipt = applicationManager.generateReceipt(application, null);
+        if (receipt != null) {
+            System.out.println("\n=== Receipt ===");
+            System.out.println(receipt);
+        } else {
+            System.out.println("Failed to generate receipt.");
+        }
+    }
+
+    private void register() {
+        System.out.print("Enter NRIC: ");
+        String nric = scanner.nextLine();
+
+        if (!nric.matches("^[ST]\\d{7}[A-Z]$")) {
+            System.out.println("Invalid NRIC format. Must be S/T followed by 7 digits and a letter.");
+            return;
+        }
+
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+
+        System.out.print("Enter age: ");
+        int age = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.println("Select marital status:");
+        System.out.println("1. Single");
+        System.out.println("2. Married");
+        int maritalChoice = scanner.nextInt();
+        scanner.nextLine();
+
+        MaritalStatus maritalStatus = (maritalChoice == 1) ? MaritalStatus.SINGLE : MaritalStatus.MARRIED;
+
+        System.out.print("Enter name: ");
+        String name = scanner.nextLine();
+
+        if (userManager.register(nric, password, age, maritalStatus, UserType.APPLICANT, name)) {
+            System.out.println("Registration successful! Please login.");
+        } else {
+            System.out.println("Registration failed. NRIC might already be registered.");
         }
     }
 }

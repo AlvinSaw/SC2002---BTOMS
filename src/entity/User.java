@@ -10,6 +10,7 @@ public abstract class User {
     private int age;
     private MaritalStatus maritalStatus;
     private UserType userType;
+    private String name;
 
     public User(String nric, String password, int age, MaritalStatus maritalStatus, UserType userType) {
         this.nric = nric;
@@ -25,6 +26,10 @@ public abstract class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void setPassword(String password, boolean needHash) {
+        this.password = needHash ? PasswordHasher.hashPassword(password) : password;
     }
 
     public String getPassword() {
@@ -54,5 +59,13 @@ public abstract class User {
         return (first == 'S' || first == 'T') && 
                Character.isLetter(last) &&
                nric.substring(1, 8).matches("\\d{7}");
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 } 

@@ -13,11 +13,13 @@ import java.time.LocalDate;
 public class Applicant extends User implements IProjectViewable, IEnquiryManageable {
     private BTOApplication currentApplication;
     private List<Enquiry> enquiries;
+    private String name;
 
-    public Applicant(String nric, String password, int age, MaritalStatus maritalStatus) {
+    public Applicant(String nric, String password, int age, MaritalStatus maritalStatus, String name) {
         super(nric, password, age, maritalStatus, UserType.APPLICANT);
         this.currentApplication = null;
         this.enquiries = new ArrayList<>();
+        this.name = name;
     }
 
     public BTOApplication getCurrentApplication() {
@@ -92,5 +94,13 @@ public class Applicant extends User implements IProjectViewable, IEnquiryManagea
         if (canWithdrawApplication()) {
             currentApplication.requestWithdrawal();
         }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 } 

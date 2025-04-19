@@ -55,8 +55,9 @@ public class HDBOfficerMenu extends ApplicantMenu {
             System.out.println("2. View My Application");
             System.out.println("3. View My Enquiries");
             System.out.println("4. Create New Enquiry");
-            System.out.println("5. Change Password");
-            System.out.println("6. Back to Main Menu");
+            System.out.println("5. Generate Receipt");
+            System.out.println("6. Change Password");
+            System.out.println("7. Back to Main Menu");
             System.out.print("Choose an option: ");
             
             int choice = scanner.nextInt();
@@ -76,9 +77,12 @@ public class HDBOfficerMenu extends ApplicantMenu {
                     createNewEnquiry();
                     break;
                 case 5:
-                    changePassword();
+                    super.generateReceipt();
                     break;
                 case 6:
+                    changePassword();
+                    break;
+                case 7:
                     return;
                 default:
                     System.out.println("Invalid option. Please try again.");
@@ -93,8 +97,9 @@ public class HDBOfficerMenu extends ApplicantMenu {
             System.out.println("2. View My Project");
             System.out.println("3. View Project Enquiries");
             System.out.println("4. View and Process Applications");
-            System.out.println("5. Change Password");
-            System.out.println("6. Back to Main Menu");
+            System.out.println("5. Generate Receipt");
+            System.out.println("6. Change Password");
+            System.out.println("7. Back to Main Menu");
             System.out.print("Choose an option: ");
             
             int choice = scanner.nextInt();
@@ -114,9 +119,12 @@ public class HDBOfficerMenu extends ApplicantMenu {
                     viewAndProcessApplications();
                     break;
                 case 5:
-                    changePassword();
+                    generateReceipt();
                     break;
                 case 6:
+                    changePassword();
+                    break;
+                case 7:
                     return;
                 default:
                     System.out.println("Invalid option. Please try again.");
@@ -385,13 +393,60 @@ public class HDBOfficerMenu extends ApplicantMenu {
 
         if (applicationManager.bookFlat(application)) {
             System.out.println("Flat booked successfully!");
+            
+            // Generate and display receipt
+            String receipt = applicationManager.generateReceipt(application, officer);
             System.out.println("\nBooking Receipt:");
-            System.out.println("Applicant NRIC: " + application.getApplicant().getNric());
-            System.out.println("Project: " + application.getProject().getProjectName());
-            System.out.println("Flat Type: " + application.getSelectedFlatType().getDisplayName());
-            System.out.println("Booking Date: " + LocalDateTime.now());
+            System.out.println(receipt);
         } else {
             System.out.println("Failed to book flat.");
+        }
+    }
+
+    @Override
+    protected void generateReceipt() {
+        BTOProject project = officer.getAssignedProject();
+        if (project == null || !officer.isRegistrationApproved()) {
+            System.out.println("You are not approved to handle any project yet.");
+            return;
+        }
+
+        List<BTOApplication> applications = applicationManager.getApplicationsForProject(project.getProjectName());
+        if (applications.isEmpty()) {
+            System.out.println("No applications for this project.");
+            return;
+        }
+
+        System.out.println("\nApplications:");
+        for (int i = 0; i < applications.size(); i++) {
+            BTOApplication app = applications.get(i);
+            if (app.getStatus() == ApplicationStatus.BOOKED) {
+                System.out.printf("%d. NRIC: %s, Name: %s, Type: %s, Status: %s%n",
+                    i + 1,
+                    app.getApplicant().getNric(),
+                    app.getApplicant().getName(),
+                    app.getSelectedFlatType().getDisplayName(),
+                    app.getStatus());
+            }
+        }
+
+        System.out.print("\nEnter application number to generate receipt (0 to go back): ");
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+
+        if (choice > 0 && choice <= applications.size()) {
+            BTOApplication selectedApp = applications.get(choice - 1);
+            if (selectedApp.getStatus() == ApplicationStatus.BOOKED) {
+                String receipt = applicationManager.generateReceipt(selectedApp, officer);
+                if (receipt != null) {
+                    System.out.println("\n=== Receipt ===");
+                    System.out.println(receipt);
+                } else {
+                    System.out.println("Failed to generate receipt.");
+                }
+            } else {
+                System.out.println("Can only generate receipts for booked applications.");
+            }
         }
     }
 }
