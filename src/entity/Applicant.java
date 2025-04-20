@@ -16,7 +16,7 @@ public class Applicant extends User implements IProjectViewable, IEnquiryManagea
     private String name;
 
     public Applicant(String nric, String password, int age, MaritalStatus maritalStatus, String name) {
-        super(nric, password, age, maritalStatus, UserType.APPLICANT);
+        super(nric, password, age, maritalStatus, UserType.APPLICANT, name);
         this.currentApplication = null;
         this.enquiries = new ArrayList<>();
         this.name = name;

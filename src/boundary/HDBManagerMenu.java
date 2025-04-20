@@ -198,12 +198,13 @@ public class HDBManagerMenu {
         }
 
         System.out.println("\n1. Toggle Project Visibility");
-        System.out.println("2. Go Back");
+        System.out.println("2. Edit Project Details");
+        System.out.println("3. Go Back");
         System.out.print("Choose an option: ");
         
         int choice = scanner.nextInt();
         scanner.nextLine();
-
+        
         switch (choice) {
             case 1:
                 project.setVisible(!project.isVisible());
@@ -211,10 +212,97 @@ public class HDBManagerMenu {
                 System.out.println("Project visibility toggled successfully!");
                 break;
             case 2:
+                editProjectDetails(project);
+                break;
+            case 3:
                 return;
             default:
                 System.out.println("Invalid option.");
         }
+    }
+
+    private void editProjectDetails(BTOProject project) {
+        System.out.println("\nEdit Project Details:");
+        System.out.println("1. Edit Neighborhood");
+        System.out.println("2. Edit Flat Units");
+        System.out.println("3. Edit Application Period");
+        System.out.println("4. Go Back");
+        System.out.print("Choose an option: ");
+        
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+        
+        switch (choice) {
+            case 1:
+                System.out.print("Enter new neighborhood: ");
+                String neighborhood = scanner.nextLine();
+                project.setNeighborhood(neighborhood);
+                projectManager.saveProjects();
+                System.out.println("Neighborhood updated successfully!");
+                break;
+            case 2:
+                editFlatUnits(project);
+                break;
+            case 3:
+                editApplicationPeriod(project);
+                break;
+            case 4:
+                return;
+            default:
+                System.out.println("Invalid option.");
+        }
+    }
+
+    private void editFlatUnits(BTOProject project) {
+        System.out.println("\nEdit Flat Units:");
+        Map<FlatType, Integer> flatUnits = new HashMap<>();
+        for (FlatType type : FlatType.values()) {
+            System.out.printf("Current %s units: %d%n", 
+                type.getDisplayName(), 
+                project.getFlatUnits().get(type));
+            System.out.printf("Enter new number of %s units (0 to keep current): ", 
+                type.getDisplayName());
+            int units = scanner.nextInt();
+            scanner.nextLine();
+            flatUnits.put(type, units > 0 ? units : project.getFlatUnits().get(type));
+        }
+        
+        project.setFlatUnits(flatUnits);
+        projectManager.saveProjects();
+        System.out.println("Flat units updated successfully!");
+    }
+
+    private void editApplicationPeriod(BTOProject project) {
+        System.out.println("\nEdit Application Period:");
+        LocalDate openDate = null;
+        LocalDate closeDate = null;
+        
+        while (openDate == null) {
+            System.out.print("Enter new application open date (yyyy-MM-dd): ");
+            try {
+                openDate = LocalDate.parse(scanner.nextLine(), DATE_FORMAT);
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date format. Please use yyyy-MM-dd.");
+            }
+        }
+        
+        while (closeDate == null) {
+            System.out.print("Enter new application close date (yyyy-MM-dd): ");
+            try {
+                closeDate = LocalDate.parse(scanner.nextLine(), DATE_FORMAT);
+                if (closeDate.isBefore(openDate)) {
+                    System.out.println("Close date must be after open date.");
+                    closeDate = null;
+                }
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date format. Please use yyyy-MM-dd.");
+            }
+        }
+        
+        project.setApplicationOpenDate(openDate);
+        project.setApplicationCloseDate(closeDate);
+        projectManager.saveProjects();
+        System.out.println("Application period updated successfully!");
     }
 
     private void viewProjectApplications() {

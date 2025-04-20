@@ -7,12 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
 
-public class HDBManager extends Applicant implements IProjectManageable {
+public class HDBManager extends User implements IProjectManageable {
     private List<BTOProject> managedProjects;
     private BTOProject currentProject;
 
-    public HDBManager(String nric, String password, int age, MaritalStatus maritalStatus) {
-        super(nric, password, age, maritalStatus, "HDB Manager");
+    public HDBManager(String nric, String password, int age, MaritalStatus maritalStatus, String name) {
+        super(nric, password, age, maritalStatus, UserType.HDB_MANAGER, name);
         this.managedProjects = new ArrayList<>();
         this.currentProject = null;
     }
@@ -71,5 +71,10 @@ public class HDBManager extends Applicant implements IProjectManageable {
         if (currentProject == null) return true;
         
         return !currentProject.isApplicationPeriodOverlapping(newProject);
+    }
+
+    @Override
+    public UserType getUserType() {
+        return UserType.HDB_MANAGER;
     }
 } 

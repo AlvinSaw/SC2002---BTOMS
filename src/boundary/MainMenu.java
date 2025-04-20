@@ -111,12 +111,12 @@ public class MainMenu {
     private void showMainMenu() {
         User currentUser = userManager.getCurrentUser();
         
-        if (currentUser instanceof HDBOfficer) {
+        if (currentUser instanceof HDBManager) {
+            new HDBManagerMenu((HDBManager) currentUser).show();
+        } else if (currentUser instanceof HDBOfficer) {
             new HDBOfficerMenu((HDBOfficer) currentUser).show();
         } else if (currentUser instanceof Applicant) {
             new ApplicantMenu((Applicant) currentUser).show();
-        } else if (currentUser instanceof HDBManager) {
-            new HDBManagerMenu((HDBManager) currentUser).show();
         }
     }
 

@@ -50,6 +50,13 @@ public class BTOProject {
 
     public void setVisible(boolean visible) { this.visible = visible; }
     public void setMaxOfficerSlots(int maxOfficerSlots) { this.maxOfficerSlots = maxOfficerSlots; }
+    public void setNeighborhood(String neighborhood) { this.neighborhood = neighborhood; }
+    public void setFlatUnits(Map<FlatType, Integer> flatUnits) { 
+        this.flatUnits = new HashMap<>(flatUnits);
+        this.remainingUnits = new HashMap<>(flatUnits);
+    }
+    public void setApplicationOpenDate(LocalDate openDate) { this.applicationOpenDate = openDate; }
+    public void setApplicationCloseDate(LocalDate closeDate) { this.applicationCloseDate = closeDate; }
     
     public boolean addOfficer(HDBOfficer officer) {
         if (officers.size() >= maxOfficerSlots) return false;

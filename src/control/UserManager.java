@@ -38,8 +38,9 @@ public class UserManager {
                         MaritalStatus.valueOf(parts[3]),
                         parts[5]);
                 } else if (userType == UserType.HDB_MANAGER) {
-                    user = new HDBManager(parts[0], "", Integer.parseInt(parts[2]), 
-                        MaritalStatus.valueOf(parts[3]));
+                    user = new HDBManager(parts[0], parts[1], Integer.parseInt(parts[2]), 
+                        MaritalStatus.valueOf(parts[3]),
+                        parts[5]);
                 }
                 if (user != null) {
                     user.setPassword(parts[1]);
@@ -111,8 +112,7 @@ public class UserManager {
         } else if (userType == UserType.HDB_OFFICER) {
             user = new HDBOfficer(nric, "", age, maritalStatus, name);
         } else if (userType == UserType.HDB_MANAGER) {
-            user = new HDBManager(nric, "", age, maritalStatus);
-            user.setName(name);
+            user = new HDBManager(nric, "", age, maritalStatus, name);
         }
 
         if (user != null) {

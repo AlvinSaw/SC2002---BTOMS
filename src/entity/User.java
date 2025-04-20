@@ -12,12 +12,13 @@ public abstract class User {
     private UserType userType;
     private String name;
 
-    public User(String nric, String password, int age, MaritalStatus maritalStatus, UserType userType) {
+    public User(String nric, String password, int age, MaritalStatus maritalStatus, UserType userType, String name) {
         this.nric = nric;
         this.password = password.isEmpty() ? "" : PasswordHasher.hashPassword(password);
         this.age = age;
         this.maritalStatus = maritalStatus;
         this.userType = userType;
+        this.name = name;
     }
 
     public String getNric() {
