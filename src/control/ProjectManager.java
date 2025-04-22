@@ -44,6 +44,11 @@ public class ProjectManager {
                 BTOProject project = new BTOProject(projectName, neighborhood, flatUnits, openDate, closeDate, manager, Integer.parseInt(parts[7]));
                 project.setVisible(Boolean.parseBoolean(parts[6]));
                 
+                // Set autoPublish property if it exists in the file
+                if (parts.length > 9) {
+                    project.setAutoPublish(Boolean.parseBoolean(parts[9]));
+                }
+                
                 if (parts.length > 8 && !parts[8].isEmpty()) {
                     String[] officerIds = parts[8].split(",");
                     for (String officerId : officerIds) {
@@ -82,7 +87,7 @@ public class ProjectManager {
                     officersStr.append(officer.getNric()).append(":").append(officer.isRegistrationApproved());
                 }
                 
-                writer.println(String.format("%s|%s|%s|%s|%s|%s|%b|%d|%s",
+                writer.println(String.format("%s|%s|%s|%s|%s|%s|%b|%d|%s|%b",
                     project.getProjectName(),
                     project.getNeighborhood(),
                     flatUnitsStr.toString(),
@@ -91,7 +96,8 @@ public class ProjectManager {
                     project.getManager().getNric(),
                     project.isVisible(),
                     project.getMaxOfficerSlots(),
-                    officersStr.toString()));
+                    officersStr.toString(),
+                    project.isAutoPublish()));
             }
         } catch (IOException e) {
             System.err.println("Error saving projects: " + e.getMessage());
@@ -169,5 +175,32 @@ public class ProjectManager {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Automatically updates project visibility based on the current date.
+     * Only sets projects to visible when their opening date is reached AND autoPublish is enabled.
+     */
+    public void autoPublishProjects() {
+        LocalDate currentDate = LocalDate.now();
+        boolean changesDetected = false;
+        
+        for (BTOProject project : projects) {
+            // Check if project has auto-publish enabled AND is not visible AND today is on or after the opening date
+            if (project.isAutoPublish() && !project.isVisible() && 
+                (currentDate.isEqual(project.getApplicationOpenDate()) || 
+                 currentDate.isAfter(project.getApplicationOpenDate()))) {
+                
+                // Set project to visible
+                project.setVisible(true);
+                System.out.println("Auto-publishing project: " + project.getProjectName());
+                changesDetected = true;
+            }
+        }
+        
+        // Only save if changes were made
+        if (changesDetected) {
+            saveProjects();
+        }
     }
 }

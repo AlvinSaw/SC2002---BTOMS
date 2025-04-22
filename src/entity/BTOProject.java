@@ -17,9 +17,10 @@ public class BTOProject {
     private List<Enquiry> enquiries;
     private boolean visible;
     private int maxOfficerSlots;
+    private boolean autoPublish; // Added property for auto-publishing
     
     public BTOProject(String projectName, String neighborhood, Map<FlatType, Integer> flatUnits,
-                     LocalDate openDate, LocalDate closeDate, HDBManager manager, int maxOfficerSlots) {
+                     LocalDate openDate, LocalDate closeDate, HDBManager manager, int maxOfficerSlots, boolean autoPublish) {
         this.projectName = projectName;
         this.neighborhood = neighborhood;
         this.flatUnits = new HashMap<>(flatUnits);
@@ -32,6 +33,13 @@ public class BTOProject {
         this.enquiries = new ArrayList<>();
         this.visible = false;
         this.maxOfficerSlots = maxOfficerSlots;
+        this.autoPublish = autoPublish;
+    }
+    
+    // Maintain backward compatibility with existing code
+    public BTOProject(String projectName, String neighborhood, Map<FlatType, Integer> flatUnits,
+                     LocalDate openDate, LocalDate closeDate, HDBManager manager, int maxOfficerSlots) {
+        this(projectName, neighborhood, flatUnits, openDate, closeDate, manager, maxOfficerSlots, false);
     }
 
     public String getProjectName() { return projectName; }
@@ -47,6 +55,7 @@ public class BTOProject {
     public boolean isVisible() { return visible; }
     public int getMaxOfficerSlots() { return maxOfficerSlots; }
     public int getRemainingOfficerSlots() { return maxOfficerSlots - officers.size(); }
+    public boolean isAutoPublish() { return autoPublish; }
 
     public void setVisible(boolean visible) { this.visible = visible; }
     public void setMaxOfficerSlots(int maxOfficerSlots) { this.maxOfficerSlots = maxOfficerSlots; }
@@ -57,6 +66,7 @@ public class BTOProject {
     }
     public void setApplicationOpenDate(LocalDate openDate) { this.applicationOpenDate = openDate; }
     public void setApplicationCloseDate(LocalDate closeDate) { this.applicationCloseDate = closeDate; }
+    public void setAutoPublish(boolean autoPublish) { this.autoPublish = autoPublish; }
     
     public boolean addOfficer(HDBOfficer officer) {
         if (officers.size() >= maxOfficerSlots) return false;
@@ -99,4 +109,4 @@ public class BTOProject {
         LocalDate now = LocalDate.now();
         return !now.isBefore(applicationOpenDate) && !now.isAfter(applicationCloseDate);
     }
-} 
+}

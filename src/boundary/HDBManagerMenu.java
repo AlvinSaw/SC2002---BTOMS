@@ -173,7 +173,22 @@ public class HDBManagerMenu {
             }
         }
         
-        BTOProject project = new BTOProject(name, neighborhood, flatUnits, openDate, closeDate, manager, maxOfficerSlots);
+        boolean autoPublish = false;
+        while (true) {
+            System.out.print("Enable auto-publish when opening date is reached? (Y/N): ");
+            String choice = scanner.nextLine();
+            if (choice.equalsIgnoreCase("Y")) {
+                autoPublish = true;
+                break;
+            } else if (choice.equalsIgnoreCase("N")) {
+                autoPublish = false;
+                break;
+            } else {
+                System.out.println("Invalid input. Please enter Y or N.");
+            }
+        }
+        
+        BTOProject project = new BTOProject(name, neighborhood, flatUnits, openDate, closeDate, manager, maxOfficerSlots, autoPublish);
         if (manager.canHandleNewProject(project)) {
             projectManager.addProject(project);
             manager.addCreatedProject(project);
@@ -281,6 +296,7 @@ public class HDBManagerMenu {
             {"Neighborhood", project.getNeighborhood()},
             {"Application Period", project.getApplicationOpenDate() + " to " + project.getApplicationCloseDate()},
             {"Visibility", project.isVisible() ? "Visible" : "Hidden"},
+            {"Auto-Publish", project.isAutoPublish() ? "Enabled" : "Disabled"},
             {"Manager", project.getManager().getNric()}
         };
         
@@ -333,10 +349,21 @@ public class HDBManagerMenu {
                 
                 switch (choice) {
                     case 1:
-                        project.setVisible(!project.isVisible());
+                        boolean newVisibility = !project.isVisible();
+                        project.setVisible(newVisibility);
+                        
+                        // If visibility is being set to hidden, disable auto-publish to prevent contradictions
+                        if (!newVisibility && project.isAutoPublish()) {
+                            project.setAutoPublish(false);
+                            System.out.println("Project visibility set to Hidden. Auto-publish has been disabled to prevent visibility conflicts.");
+                        } else {
+                            System.out.println("Project visibility toggled successfully!");
+                        }
+                        
                         projectManager.saveProjects();
-                        System.out.println("Project visibility toggled successfully!");
-                        break;
+                        System.out.println("\nUpdated project details:");
+                        viewProjectDetails(project, isOwnedProject);  // Reprint project details after toggle
+                        return;
                     case 2:
                         editProjectDetails(project);
                         break;
@@ -353,6 +380,129 @@ public class HDBManagerMenu {
             System.out.println("\nPress Enter to go back...");
             scanner.nextLine();
         }
+    }
+
+    private void editProjectDetails(BTOProject project) {
+        System.out.println("\nEdit Project Details:");
+        System.out.println("1. Edit Neighborhood");
+        System.out.println("2. Edit Application Dates");
+        System.out.println("3. Toggle Auto-Publish Setting");
+        System.out.println("4. Go Back");
+        System.out.print("Choose an option: ");
+        
+        try {
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+            
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter new neighborhood: ");
+                    String neighborhood = scanner.nextLine();
+                    project.setNeighborhood(neighborhood);
+                    projectManager.saveProjects();
+                    System.out.println("Neighborhood updated successfully!");
+                    System.out.println("\nUpdated project details:");
+                    viewProjectDetails(project, true);  // Reprint project details after edit
+                    return;
+                    
+                case 2:
+                    editProjectDates(project);
+                    return;
+                    
+                case 3:
+                    // Toggle auto-publish setting
+                    project.setAutoPublish(!project.isAutoPublish());
+                    projectManager.saveProjects();
+                    System.out.println("Auto-publish setting toggled to: " + 
+                                      (project.isAutoPublish() ? "ENABLED" : "DISABLED"));
+                    System.out.println("\nUpdated project details:");
+                    viewProjectDetails(project, true);  // Reprint project details after toggle
+                    return;
+                    
+                case 4:
+                    return;
+                    
+                default:
+                    System.out.println("Invalid option.");
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid option.");
+            scanner.nextLine();
+        }
+    }
+    
+    private void editProjectDates(BTOProject project) {
+        LocalDate now = LocalDate.now();
+        
+        // Check if project has applications - if yes, only allow editing close date
+        boolean hasApplications = !project.getApplications().isEmpty();
+        
+        if (hasApplications) {
+            System.out.println("Note: This project has existing applications.");
+            System.out.println("You can only modify the closing date. The opening date cannot be changed.");
+            
+            LocalDate closeDate = null;
+            while (closeDate == null) {
+                System.out.print("Enter new application close date (yyyy-MM-dd): ");
+                try {
+                    closeDate = LocalDate.parse(scanner.nextLine(), DATE_FORMAT);
+                    
+                    // Make sure new close date is after open date and today
+                    if (closeDate.isBefore(project.getApplicationOpenDate())) {
+                        System.out.println("Close date must be after open date.");
+                        closeDate = null;
+                    } else if (closeDate.isBefore(now)) {
+                        System.out.println("Close date cannot be before today.");
+                        closeDate = null;
+                    }
+                } catch (DateTimeParseException e) {
+                    System.out.println("Invalid date format. Please use yyyy-MM-dd.");
+                }
+            }
+            
+            project.setApplicationCloseDate(closeDate);
+            projectManager.saveProjects();
+            System.out.println("Application closing date updated successfully!");
+            System.out.println("\nUpdated project details:");
+            viewProjectDetails(project, true);  // Reprint project details after date changes
+            return;
+        }
+        
+        // Original behavior for projects without applications (can modify both dates)
+        LocalDate openDate = null;
+        while (openDate == null) {
+            System.out.print("Enter new application open date (yyyy-MM-dd): ");
+            try {
+                openDate = LocalDate.parse(scanner.nextLine(), DATE_FORMAT);
+                if (openDate.isBefore(now)) {
+                    System.out.println("Open date cannot be before today.");
+                    openDate = null;
+                }
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date format. Please use yyyy-MM-dd.");
+            }
+        }
+        
+        LocalDate closeDate = null;
+        while (closeDate == null) {
+            System.out.print("Enter new application close date (yyyy-MM-dd): ");
+            try {
+                closeDate = LocalDate.parse(scanner.nextLine(), DATE_FORMAT);
+                if (closeDate.isBefore(openDate)) {
+                    System.out.println("Close date must be after open date.");
+                    closeDate = null;
+                }
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date format. Please use yyyy-MM-dd.");
+            }
+        }
+        
+        project.setApplicationOpenDate(openDate);
+        project.setApplicationCloseDate(closeDate);
+        projectManager.saveProjects();
+        System.out.println("Application dates updated successfully!");
+        System.out.println("\nUpdated project details:");
+        viewProjectDetails(project, true);  // Reprint project details after date changes
     }
 
     private void viewProjectApplications() {
@@ -679,6 +829,9 @@ public class HDBManagerMenu {
     private void generateAllApplicationsReport(List<BTOApplication> applications) {
         System.out.printf("Total Applications: %d%n%n", applications.size());
         
+        // Define date formatter for consistent display
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        
         String[] headers = {"NRIC", "Name", "Age", "Marital Status", "Flat Type", "Status", "Date"};
         String[][] data = new String[applications.size()][7];
         
@@ -690,7 +843,7 @@ public class HDBManagerMenu {
             data[i][3] = app.getApplicant().getMaritalStatus().toString();
             data[i][4] = app.getSelectedFlatType().getDisplayName();
             data[i][5] = app.getStatus().toString();
-            data[i][6] = app.getApplicationDate().toString();
+            data[i][6] = app.getApplicationDate().format(dateFormatter);
         }
         
         TablePrinter.printTable(headers, data);
@@ -764,6 +917,9 @@ public class HDBManagerMenu {
     }
 
     private void printApplicationDetails(BTOApplication app) {
+        // Define date formatter for consistent display
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        
         String[] headers = {"Property", "Value"};
         String[][] data = {
             {"Name", app.getApplicant().getName()},
@@ -772,7 +928,7 @@ public class HDBManagerMenu {
             {"Marital Status", app.getApplicant().getMaritalStatus().toString()},
             {"Flat Type", app.getSelectedFlatType().getDisplayName()},
             {"Status", app.getStatus().toString()},
-            {"Application Date", app.getApplicationDate().toString()}
+            {"Application Date", app.getApplicationDate().format(dateFormatter)}
         };
         
         TablePrinter.printTable(headers, data);

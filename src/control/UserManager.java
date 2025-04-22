@@ -2,6 +2,7 @@ package control;
 
 import entity.*;
 import enums.*;
+import util.SystemLogger;
 import java.util.*;
 import java.io.*;
 
@@ -56,12 +57,18 @@ public class UserManager {
         User user = users.get(nric);
         if (user != null && user.validatePassword(password)) {
             currentUser = user;
+            // Log the successful login
+            SystemLogger.logLogin(user.getNric(), user.getName(), user.getUserType().toString());
             return true;
         }
         return false;
     }
 
     public void logout() {
+        if (currentUser != null) {
+            // Log the logout event before setting currentUser to null
+            SystemLogger.logLogout(currentUser.getNric(), currentUser.getName(), currentUser.getUserType().toString());
+        }
         currentUser = null;
     }
 

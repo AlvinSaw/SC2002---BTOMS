@@ -132,11 +132,21 @@ public class EnquiryManager {
         return false;
     }
 
+    /**
+     * Formats a datetime for display in reports
+     * @param dateTime The datetime to format
+     * @return A formatted string representation of the datetime
+     */
+    public String formatDateTimeForReport(LocalDateTime dateTime) {
+        if (dateTime == null) return "N/A";
+        return dateTime.format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a"));
+    }
+
     public boolean replyToEnquiry(String enquiryId, String reply, HDBManager manager) {
         for (Enquiry enquiry : enquiries) {
             if (enquiry.getId().equals(enquiryId)) {
                 if (manager.getManagedProjects().contains(enquiry.getProject())) {
-                    enquiry.setReply(reply);
+                    enquiry.addReply(reply); // Changed from setReply to addReply to properly set reply time
                     saveEnquiries();
                     return true;
                 }
@@ -145,4 +155,4 @@ public class EnquiryManager {
         }
         return false;
     }
-} 
+}

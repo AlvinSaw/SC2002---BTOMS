@@ -67,6 +67,10 @@ public class MainMenu {
         
         if (userManager.login(nric, password)) {
             User currentUser = userManager.getCurrentUser();
+            
+            // Auto-publish eligible projects when a user logs in
+            ProjectManager.getInstance().autoPublishProjects();
+            
             System.out.println("\n=== Welcome to BTO Management System ===");
             System.out.println("Welcome, " + currentUser.getName() + "!");
             System.out.println("Role: " + currentUser.getUserType());
