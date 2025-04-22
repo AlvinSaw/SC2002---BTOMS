@@ -3,8 +3,10 @@ package boundary;
 import control.*;
 import entity.*;
 import enums.*;
+import util.TablePrinter;
 import java.util.*;
 import java.time.LocalDateTime;
+import java.util.InputMismatchException;
 
 public class HDBOfficerMenu extends ApplicantMenu {
     private HDBOfficer officer;
@@ -29,21 +31,29 @@ public class HDBOfficerMenu extends ApplicantMenu {
             System.out.println("3. Logout");
             System.out.print("Choose an option: ");
             
-            int choice = scanner.nextInt();
-            scanner.nextLine();
-            
-            switch (choice) {
-                case 1:
-                    showApplicantMenu();
-                    break;
-                case 2:
-                    showOfficerMenu();
-                    break;
-                case 3:
-                    UserManager.getInstance().logout();
-                    return;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+                
+                switch (choice) {
+                    case 1:
+                        showApplicantMenu();
+                        break;
+                    case 2:
+                        showOfficerMenu();
+                        break;
+                    case 3:
+                        UserManager.getInstance().logout();
+                        return;
+                    default:
+                        System.out.println("Invalid option. Please try again.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number (1-3).");
+                scanner.nextLine(); // Clear invalid input
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
+                scanner.nextLine(); // Clear invalid input
             }
         }
     }
@@ -60,32 +70,40 @@ public class HDBOfficerMenu extends ApplicantMenu {
             System.out.println("7. Back to Main Menu");
             System.out.print("Choose an option: ");
             
-            int choice = scanner.nextInt();
-            scanner.nextLine();
-            
-            switch (choice) {
-                case 1:
-                    viewAvailableProjects();
-                    break;
-                case 2:
-                    viewMyApplication();
-                    break;
-                case 3:
-                    viewMyEnquiries();
-                    break;
-                case 4:
-                    createNewEnquiry();
-                    break;
-                case 5:
-                    super.generateReceipt();
-                    break;
-                case 6:
-                    changePassword();
-                    break;
-                case 7:
-                    return;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+                
+                switch (choice) {
+                    case 1:
+                        viewAvailableProjects();
+                        break;
+                    case 2:
+                        viewMyApplication();
+                        break;
+                    case 3:
+                        viewMyEnquiries();
+                        break;
+                    case 4:
+                        createNewEnquiry();
+                        break;
+                    case 5:
+                        super.generateReceipt();
+                        break;
+                    case 6:
+                        changePassword();
+                        break;
+                    case 7:
+                        return;
+                    default:
+                        System.out.println("Invalid option. Please try again.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number (1-7).");
+                scanner.nextLine(); // Clear invalid input
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
+                scanner.nextLine(); // Clear invalid input
             }
         }
     }
@@ -102,32 +120,40 @@ public class HDBOfficerMenu extends ApplicantMenu {
             System.out.println("7. Back to Main Menu");
             System.out.print("Choose an option: ");
             
-            int choice = scanner.nextInt();
-            scanner.nextLine();
-            
-            switch (choice) {
-                case 1:
-                    viewProjectsRegister();
-                    break;
-                case 2:
-                    viewMyProject();
-                    break;
-                case 3:
-                    viewProjectEnquiries();
-                    break;
-                case 4:
-                    viewAndProcessApplications();
-                    break;
-                case 5:
-                    generateReceipt();
-                    break;
-                case 6:
-                    changePassword();
-                    break;
-                case 7:
-                    return;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+                
+                switch (choice) {
+                    case 1:
+                        viewProjectsRegister();
+                        break;
+                    case 2:
+                        viewMyProject();
+                        break;
+                    case 3:
+                        viewProjectEnquiries();
+                        break;
+                    case 4:
+                        viewAndProcessApplications();
+                        break;
+                    case 5:
+                        generateReceipt();
+                        break;
+                    case 6:
+                        changePassword();
+                        break;
+                    case 7:
+                        return;
+                    default:
+                        System.out.println("Invalid option. Please try again.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number (1-7).");
+                scanner.nextLine(); // Clear invalid input
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
+                scanner.nextLine(); // Clear invalid input
             }
         }
     }
@@ -148,28 +174,40 @@ public class HDBOfficerMenu extends ApplicantMenu {
         }
 
         System.out.println("\nAvailable Projects:");
+        String[] headers = {"No.", "Project Name", "Neighborhood", "Available Slots"};
+        String[][] data = new String[availableProjects.size()][4];
+        
         for (int i = 0; i < availableProjects.size(); i++) {
             BTOProject project = availableProjects.get(i);
-            System.out.printf("%d. %s (%s) - %d slots remaining%n",
-                i + 1,
-                project.getProjectName(),
-                project.getNeighborhood(),
-                project.getRemainingOfficerSlots());
+            data[i][0] = String.valueOf(i + 1);
+            data[i][1] = project.getProjectName();
+            data[i][2] = project.getNeighborhood();
+            data[i][3] = String.valueOf(project.getRemainingOfficerSlots());
         }
+        
+        TablePrinter.printTable(headers, data);
 
         System.out.print("Enter project number to register (0 to go back): ");
-        int choice = scanner.nextInt();
-        scanner.nextLine(); 
+        try {
+            int choice = scanner.nextInt();
+            scanner.nextLine(); 
 
-        if (choice > 0 && choice <= availableProjects.size()) {
-            BTOProject selected = availableProjects.get(choice - 1);
-            if (selected.addOfficer(officer)) {
-                officer.setAssignedProject(selected);
-                projectManager.saveProjects();
-                System.out.println("Registration submitted successfully! Awaiting manager approval.");
-            } else {
-                System.out.println("Failed to register for project.");
+            if (choice > 0 && choice <= availableProjects.size()) {
+                BTOProject selected = availableProjects.get(choice - 1);
+                if (selected.addOfficer(officer)) {
+                    officer.setAssignedProject(selected);
+                    projectManager.saveProjects();
+                    System.out.println("Registration submitted successfully! Awaiting manager approval.");
+                } else {
+                    System.out.println("Failed to register for project.");
+                }
             }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid project number.");
+            scanner.nextLine(); // Clear invalid input
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            scanner.nextLine(); // Clear invalid input
         }
     }
 
@@ -181,15 +219,31 @@ public class HDBOfficerMenu extends ApplicantMenu {
         }
 
         System.out.println("\nMy Project Details:");
-        System.out.println("Name: " + project.getProjectName());
-        System.out.println("Neighborhood: " + project.getNeighborhood());
-        System.out.println("Application Period: " + project.getApplicationOpenDate() + " to " + project.getApplicationCloseDate());
-        System.out.println("Registration Status: " + (officer.isRegistrationApproved() ? "Approved" : "Pending"));
-        System.out.println("\nRemaining Units:");
         
+        // Project basic information table
+        String[] basicHeaders = {"Property", "Value"};
+        String[][] basicData = {
+            {"Name", project.getProjectName()},
+            {"Neighborhood", project.getNeighborhood()},
+            {"Application Period", project.getApplicationOpenDate() + " to " + project.getApplicationCloseDate()},
+            {"Registration Status", officer.isRegistrationApproved() ? "Approved" : "Pending"}
+        };
+        
+        TablePrinter.printTable(basicHeaders, basicData);
+        
+        // Remaining units table
+        System.out.println("\nRemaining Units:");
+        String[] flatHeaders = {"Flat Type", "Remaining Units"};
+        String[][] flatData = new String[project.getRemainingUnits().size()][2];
+        
+        int i = 0;
         for (Map.Entry<FlatType, Integer> entry : project.getRemainingUnits().entrySet()) {
-            System.out.printf("%s: %d units%n", entry.getKey().getDisplayName(), entry.getValue());
+            flatData[i][0] = entry.getKey().getDisplayName();
+            flatData[i][1] = String.valueOf(entry.getValue());
+            i++;
         }
+        
+        TablePrinter.printTable(flatHeaders, flatData);
     }
 
     private void viewProjectEnquiries() {
@@ -206,32 +260,44 @@ public class HDBOfficerMenu extends ApplicantMenu {
         }
 
         System.out.println("\nProject Enquiries:");
+        String[] headers = {"No.", "From", "Content", "Reply Status"};
+        String[][] data = new String[enquiries.size()][4];
+        
         for (int i = 0; i < enquiries.size(); i++) {
             Enquiry enquiry = enquiries.get(i);
-            System.out.printf("%d. From: %s%n   Content: %s%n   Reply: %s%n",
-                i + 1,
-                enquiry.getCreator().getNric(),
-                enquiry.getContent(),
-                enquiry.getReply() != null ? enquiry.getReply() : "No reply yet");
+            data[i][0] = String.valueOf(i + 1);
+            data[i][1] = enquiry.getCreator().getName() + " (" + enquiry.getCreator().getNric() + ")";
+            data[i][2] = enquiry.getContent();
+            data[i][3] = enquiry.hasReply() ? "Replied: " + enquiry.getReply() : "No reply yet";
         }
+        
+        TablePrinter.printTable(headers, data);
 
         System.out.print("Enter enquiry number to reply (0 to go back): ");
-        int choice = scanner.nextInt();
-        scanner.nextLine(); 
+        try {
+            int choice = scanner.nextInt();
+            scanner.nextLine(); 
 
-        if (choice > 0 && choice <= enquiries.size()) {
-            Enquiry selected = enquiries.get(choice - 1);
-            if (!selected.hasReply()) {
-                System.out.print("Enter your reply: ");
-                String reply = scanner.nextLine();
-                if (enquiryManager.addReply(selected.getId(), reply, officer)) {
-                    System.out.println("Reply added successfully!");
+            if (choice > 0 && choice <= enquiries.size()) {
+                Enquiry selected = enquiries.get(choice - 1);
+                if (!selected.hasReply()) {
+                    System.out.print("Enter your reply: ");
+                    String reply = scanner.nextLine();
+                    if (enquiryManager.addReply(selected.getId(), reply, officer)) {
+                        System.out.println("Reply added successfully!");
+                    } else {
+                        System.out.println("Failed to add reply.");
+                    }
                 } else {
-                    System.out.println("Failed to add reply.");
+                    System.out.println("This enquiry has already been replied to.");
                 }
-            } else {
-                System.out.println("This enquiry has already been replied to.");
             }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid enquiry number.");
+            scanner.nextLine(); // Clear invalid input
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            scanner.nextLine(); // Clear invalid input
         }
     }
 
@@ -252,15 +318,23 @@ public class HDBOfficerMenu extends ApplicantMenu {
             }
 
             System.out.println("\nApplications:");
+            String[] headers = {"No.", "Applicant", "NRIC", "Age", "Marital Status", "Flat Type", "Status", "Withdrawal"};
+            String[][] data = new String[applications.size()][8];
+            
             for (int i = 0; i < applications.size(); i++) {
                 BTOApplication app = applications.get(i);
-                System.out.printf("%d. NRIC: %s, Type: %s, Status: %s%s%n",
-                    i + 1,
-                    app.getApplicant().getNric(),
-                    app.getSelectedFlatType().getDisplayName(),
-                    app.getStatus(),
-                    app.isWithdrawalRequested() ? " (Withdrawal Requested)" : "");
+                Applicant applicant = app.getApplicant();
+                data[i][0] = String.valueOf(i + 1);
+                data[i][1] = applicant.getName();
+                data[i][2] = applicant.getNric();
+                data[i][3] = String.valueOf(applicant.getAge());
+                data[i][4] = applicant.getMaritalStatus().toString();
+                data[i][5] = app.getSelectedFlatType().getDisplayName();
+                data[i][6] = app.getStatus().toString();
+                data[i][7] = app.isWithdrawalRequested() ? "Yes" : "No";
             }
+            
+            TablePrinter.printTable(headers, data);
 
             System.out.println("\n1. Process Application Status");
             System.out.println("2. Process Withdrawal Request");
@@ -268,138 +342,198 @@ public class HDBOfficerMenu extends ApplicantMenu {
             System.out.println("4. Go Back");
             System.out.print("Choose an option: ");
             
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
 
-            switch (choice) {
-                case 1:
-                    processApplicationStatus(applications);
-                    break;
-                case 2:
-                    processWithdrawalRequest(applications);
-                    break;
-                case 3:
-                    processFlatBooking(applications);
-                    break;
-                case 4:
-                    continueProcessing = false;
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+                switch (choice) {
+                    case 1:
+                        processApplicationStatus(applications);
+                        break;
+                    case 2:
+                        processWithdrawalRequest(applications);
+                        break;
+                    case 3:
+                        processFlatBooking(applications);
+                        break;
+                    case 4:
+                        continueProcessing = false;
+                        break;
+                    default:
+                        System.out.println("Invalid option. Please try again.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number (1-4).");
+                scanner.nextLine(); // Clear invalid input
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
+                scanner.nextLine(); // Clear invalid input
             }
         }
     }
 
     private void processApplicationStatus(List<BTOApplication> applications) {
         System.out.print("Enter application number: ");
-        int appNum = scanner.nextInt();
-        scanner.nextLine(); 
+        try {
+            int appNum = scanner.nextInt();
+            scanner.nextLine(); 
 
-        if (appNum < 1 || appNum > applications.size()) {
-            System.out.println("Invalid application number.");
-            return;
-        }
-
-        BTOApplication application = applications.get(appNum - 1);
-        if (application.getStatus() != ApplicationStatus.PENDING) {
-            System.out.println("Can only process pending applications.");
-            return;
-        }
-
-        System.out.println("1. Mark as Successful");
-        System.out.println("2. Mark as Unsuccessful");
-        System.out.print("Choose an option: ");
-        
-        int choice = scanner.nextInt();
-        scanner.nextLine(); 
-
-        ApplicationStatus newStatus = null;
-        switch (choice) {
-            case 1:
-                newStatus = ApplicationStatus.SUCCESSFUL;
-                break;
-            case 2:
-                newStatus = ApplicationStatus.UNSUCCESSFUL;
-                break;
-            default:
-                System.out.println("Invalid option.");
+            if (appNum < 1 || appNum > applications.size()) {
+                System.out.println("Invalid application number.");
                 return;
-        }
+            }
 
-        if (applicationManager.updateApplicationStatus(application, newStatus)) {
-            System.out.println("Application status updated successfully!");
-        } else {
-            System.out.println("Failed to update application status.");
+            BTOApplication application = applications.get(appNum - 1);
+            if (application.getStatus() != ApplicationStatus.PENDING) {
+                System.out.println("Can only process pending applications.");
+                return;
+            }
+
+            System.out.printf("Processing application for %s (NRIC: %s, Age: %d, Status: %s)%n", 
+                application.getApplicant().getName(),
+                application.getApplicant().getNric(),
+                application.getApplicant().getAge(),
+                application.getApplicant().getMaritalStatus());
+
+            System.out.println("1. Mark as Successful");
+            System.out.println("2. Mark as Unsuccessful");
+            System.out.print("Choose an option: ");
+            
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine(); 
+
+                ApplicationStatus newStatus = null;
+                switch (choice) {
+                    case 1:
+                        newStatus = ApplicationStatus.SUCCESSFUL;
+                        break;
+                    case 2:
+                        newStatus = ApplicationStatus.UNSUCCESSFUL;
+                        break;
+                    default:
+                        System.out.println("Invalid option.");
+                        return;
+                }
+
+                if (applicationManager.updateApplicationStatus(application, newStatus)) {
+                    System.out.println("Application status updated successfully!");
+                } else {
+                    System.out.println("Failed to update application status.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scanner.nextLine(); // Clear invalid input
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid application number.");
+            scanner.nextLine(); // Clear invalid input
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            scanner.nextLine(); // Clear invalid input
         }
     }
 
     private void processWithdrawalRequest(List<BTOApplication> applications) {
         System.out.print("Enter application number: ");
-        int appNum = scanner.nextInt();
-        scanner.nextLine(); 
+        try {
+            int appNum = scanner.nextInt();
+            scanner.nextLine(); 
 
-        if (appNum < 1 || appNum > applications.size()) {
-            System.out.println("Invalid application number.");
-            return;
-        }
-
-        BTOApplication application = applications.get(appNum - 1);
-        if (!application.isWithdrawalRequested()) {
-            System.out.println("No withdrawal request for this application.");
-            return;
-        }
-
-        System.out.println("1. Approve Withdrawal");
-        System.out.println("2. Reject Withdrawal");
-        System.out.print("Choose an option: ");
-        
-        int choice = scanner.nextInt();
-        scanner.nextLine(); 
-
-        if (choice == 1) {
-            if (applicationManager.approveWithdrawal(application)) {
-                System.out.println("Withdrawal request approved successfully!");
-                System.out.println("The applicant can now apply for another project.");
-            } else {
-                System.out.println("Failed to approve withdrawal request.");
+            if (appNum < 1 || appNum > applications.size()) {
+                System.out.println("Invalid application number.");
+                return;
             }
-        } else if (choice == 2) {
-            if (applicationManager.updateApplicationStatus(application, application.getStatus())) {
-                application.requestWithdrawal(); // Reset withdrawal request
-                System.out.println("Withdrawal request rejected.");
-            } else {
-                System.out.println("Failed to reject withdrawal request.");
+
+            BTOApplication application = applications.get(appNum - 1);
+            if (!application.isWithdrawalRequested()) {
+                System.out.println("No withdrawal request for this application.");
+                return;
             }
-        } else {
-            System.out.println("Invalid option.");
+
+            System.out.printf("Processing withdrawal request for %s (NRIC: %s, Age: %d, Status: %s)%n", 
+                application.getApplicant().getName(),
+                application.getApplicant().getNric(),
+                application.getApplicant().getAge(),
+                application.getApplicant().getMaritalStatus());
+
+            System.out.println("1. Approve Withdrawal");
+            System.out.println("2. Reject Withdrawal");
+            System.out.print("Choose an option: ");
+            
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine(); 
+
+                if (choice == 1) {
+                    if (applicationManager.approveWithdrawal(application)) {
+                        System.out.println("Withdrawal request approved successfully!");
+                        System.out.println("The applicant can now apply for another project.");
+                    } else {
+                        System.out.println("Failed to approve withdrawal request.");
+                    }
+                } else if (choice == 2) {
+                    if (applicationManager.updateApplicationStatus(application, application.getStatus())) {
+                        application.requestWithdrawal(); // Reset withdrawal request
+                        System.out.println("Withdrawal request rejected.");
+                    } else {
+                        System.out.println("Failed to reject withdrawal request.");
+                    }
+                } else {
+                    System.out.println("Invalid option.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scanner.nextLine(); // Clear invalid input
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid application number.");
+            scanner.nextLine(); // Clear invalid input
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            scanner.nextLine(); // Clear invalid input
         }
     }
 
     private void processFlatBooking(List<BTOApplication> applications) {
         System.out.print("Enter application number: ");
-        int appNum = scanner.nextInt();
-        scanner.nextLine(); 
+        try {
+            int appNum = scanner.nextInt();
+            scanner.nextLine(); 
 
-        if (appNum < 1 || appNum > applications.size()) {
-            System.out.println("Invalid application number.");
-            return;
-        }
+            if (appNum < 1 || appNum > applications.size()) {
+                System.out.println("Invalid application number.");
+                return;
+            }
 
-        BTOApplication application = applications.get(appNum - 1);
-        if (!application.canBook()) {
-            System.out.println("This application is not eligible for flat booking.");
-            return;
-        }
+            BTOApplication application = applications.get(appNum - 1);
+            if (!application.canBook()) {
+                System.out.println("This application is not eligible for flat booking.");
+                return;
+            }
 
-        if (applicationManager.bookFlat(application)) {
-            System.out.println("Flat booked successfully!");
-            
-            // Generate and display receipt
-            String receipt = applicationManager.generateReceipt(application, officer);
-            System.out.println("\nBooking Receipt:");
-            System.out.println(receipt);
-        } else {
-            System.out.println("Failed to book flat.");
+            System.out.printf("Processing flat booking for %s (NRIC: %s, Age: %d, Status: %s)%n", 
+                application.getApplicant().getName(),
+                application.getApplicant().getNric(),
+                application.getApplicant().getAge(),
+                application.getApplicant().getMaritalStatus());
+
+            if (applicationManager.bookFlat(application)) {
+                System.out.println("Flat booked successfully!");
+                
+                // Generate and display receipt
+                String receipt = applicationManager.generateReceipt(application, officer);
+                System.out.println("\nBooking Receipt:");
+                System.out.println(receipt);
+            } else {
+                System.out.println("Failed to book flat.");
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid application number.");
+            scanner.nextLine(); // Clear invalid input
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            scanner.nextLine(); // Clear invalid input
         }
     }
 
@@ -421,32 +555,43 @@ public class HDBOfficerMenu extends ApplicantMenu {
         for (int i = 0; i < applications.size(); i++) {
             BTOApplication app = applications.get(i);
             if (app.getStatus() == ApplicationStatus.BOOKED) {
-                System.out.printf("%d. NRIC: %s, Name: %s, Type: %s, Status: %s%n",
+                Applicant applicant = app.getApplicant();
+                System.out.printf("%d. Applicant: %s (NRIC: %s, Age: %d, Status: %s), Type: %s, Status: %s%n",
                     i + 1,
-                    app.getApplicant().getNric(),
-                    app.getApplicant().getName(),
+                    applicant.getName(),
+                    applicant.getNric(),
+                    applicant.getAge(),
+                    applicant.getMaritalStatus(),
                     app.getSelectedFlatType().getDisplayName(),
                     app.getStatus());
             }
         }
 
         System.out.print("\nEnter application number to generate receipt (0 to go back): ");
-        int choice = scanner.nextInt();
-        scanner.nextLine();
+        try {
+            int choice = scanner.nextInt();
+            scanner.nextLine();
 
-        if (choice > 0 && choice <= applications.size()) {
-            BTOApplication selectedApp = applications.get(choice - 1);
-            if (selectedApp.getStatus() == ApplicationStatus.BOOKED) {
-                String receipt = applicationManager.generateReceipt(selectedApp, officer);
-                if (receipt != null) {
-                    System.out.println("\n=== Receipt ===");
-                    System.out.println(receipt);
+            if (choice > 0 && choice <= applications.size()) {
+                BTOApplication selectedApp = applications.get(choice - 1);
+                if (selectedApp.getStatus() == ApplicationStatus.BOOKED) {
+                    String receipt = applicationManager.generateReceipt(selectedApp, officer);
+                    if (receipt != null) {
+                        System.out.println("\n=== Receipt ===");
+                        System.out.println(receipt);
+                    } else {
+                        System.out.println("Failed to generate receipt.");
+                    }
                 } else {
-                    System.out.println("Failed to generate receipt.");
+                    System.out.println("Can only generate receipts for booked applications.");
                 }
-            } else {
-                System.out.println("Can only generate receipts for booked applications.");
             }
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please enter a valid application number.");
+            scanner.nextLine(); // Clear invalid input
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            scanner.nextLine(); // Clear invalid input
         }
     }
 }

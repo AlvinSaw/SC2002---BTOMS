@@ -66,13 +66,22 @@ public class UserManager {
     }
 
     public boolean changePassword(String oldPassword, String newPassword) {
-        if (currentUser != null && currentUser.validatePassword(oldPassword)) {
-            String hashedNewPassword = PasswordHasher.hashPassword(newPassword);
-            currentUser.setPassword(hashedNewPassword);
-            saveUsers();
-            return true;
+        if (currentUser == null) {
+            return false;
         }
-        return false;
+
+        if (!currentUser.validatePassword(oldPassword)) {
+            return false;
+        }
+
+        // Check if new password is the same as the old password
+        if (oldPassword.equals(newPassword)) {
+            return false;
+        }
+
+        currentUser.setPassword(newPassword, true);
+        saveUsers();
+        return true;
     }
 
     public User getCurrentUser() {
@@ -123,4 +132,4 @@ public class UserManager {
         }
         return false;
     }
-} 
+}
