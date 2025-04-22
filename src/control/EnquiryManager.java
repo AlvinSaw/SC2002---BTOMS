@@ -131,4 +131,18 @@ public class EnquiryManager {
         }
         return false;
     }
+
+    public boolean replyToEnquiry(String enquiryId, String reply, HDBManager manager) {
+        for (Enquiry enquiry : enquiries) {
+            if (enquiry.getId().equals(enquiryId)) {
+                if (manager.getManagedProjects().contains(enquiry.getProject())) {
+                    enquiry.setReply(reply);
+                    saveEnquiries();
+                    return true;
+                }
+                return false;
+            }
+        }
+        return false;
+    }
 } 

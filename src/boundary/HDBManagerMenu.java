@@ -75,18 +75,47 @@ public class HDBManagerMenu {
     }
 
     private void createNewProject() {
-        System.out.print("Enter project name: ");
-        String name = scanner.nextLine();
+        String name = null;
+        while (name == null) {
+            System.out.print("Enter project name: ");
+            name = scanner.nextLine();
+            if (name.length() < 2) {
+                System.out.println("Project name must be at least 2 characters long. Please try again.");
+                name = null;
+                continue;
+            }
+            if (Character.isDigit(name.charAt(0))) {
+                System.out.println("Project name cannot start with a number. Please try again.");
+                name = null;
+                continue;
+            }
+            if (projectManager.getProject(name) != null) {
+                System.out.println("Project name already exists. Please choose a different name.");
+                name = null;
+            }
+        }
         
         System.out.print("Enter neighborhood: ");
         String neighborhood = scanner.nextLine();
         
         Map<FlatType, Integer> flatUnits = new HashMap<>();
         for (FlatType type : FlatType.values()) {
-            System.out.printf("Enter number of %s units: ", type.getDisplayName());
-            int units = scanner.nextInt();
-            scanner.nextLine();
-            flatUnits.put(type, units);
+            while (true) {
+                try {
+                    System.out.printf("Enter number of %s units: ", type.getDisplayName());
+                    int units = scanner.nextInt();
+                    scanner.nextLine();
+                    if (units < 0) {
+                        System.out.println("Number of units cannot be negative. Please try again.");
+                        continue;
+                    }
+                    flatUnits.put(type, units);
+                    break;
+                } catch (InputMismatchException e) {
+                    System.out.println("Invalid input. Please enter a number.");
+                    scanner.nextLine();
+                }
+            }
         }
         
         LocalDate now = LocalDate.now();
@@ -119,9 +148,20 @@ public class HDBManagerMenu {
             }
         }
 
-        System.out.print("Enter maximum number of officers for this project: ");
-        int maxOfficerSlots = scanner.nextInt();
-        scanner.nextLine();
+        int maxOfficerSlots = 0;
+        while (maxOfficerSlots <= 0) {
+            try {
+                System.out.print("Enter maximum number of officers for this project: ");
+                maxOfficerSlots = scanner.nextInt();
+                scanner.nextLine();
+                if (maxOfficerSlots <= 0) {
+                    System.out.println("Number of officers must be greater than 0. Please try again.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.nextLine();
+            }
+        }
         
         BTOProject project = new BTOProject(name, neighborhood, flatUnits, openDate, closeDate, manager, maxOfficerSlots);
         if (manager.canHandleNewProject(project)) {
@@ -368,27 +408,32 @@ public class HDBManagerMenu {
     }
 
     private void viewProjectEnquiries() {
-        List<BTOProject> projects = manager.getManagedProjects();
-        if (projects.isEmpty()) {
-            System.out.println("You have no projects.");
+        List<BTOProject> allProjects = projectManager.getAllProjects();
+        if (allProjects.isEmpty()) {
+            System.out.println("No projects available.");
             return;
         }
 
         System.out.println("\nSelect Project:");
-        for (int i = 0; i < projects.size(); i++) {
-            System.out.printf("%d. %s%n", i + 1, projects.get(i).getProjectName());
+        for (int i = 0; i < allProjects.size(); i++) {
+            System.out.printf("%d. %s%n", i + 1, allProjects.get(i).getProjectName());
         }
+        System.out.println("0. Go Back");
 
         System.out.print("Enter project number: ");
         int projectNum = scanner.nextInt();
         scanner.nextLine();
 
-        if (projectNum < 1 || projectNum > projects.size()) {
+        if (projectNum == 0) {
+            return;
+        }
+
+        if (projectNum < 1 || projectNum > allProjects.size()) {
             System.out.println("Invalid project number.");
             return;
         }
 
-        BTOProject selected = projects.get(projectNum - 1);
+        BTOProject selected = allProjects.get(projectNum - 1);
         List<Enquiry> enquiries = enquiryManager.getEnquiriesForProject(selected.getProjectName());
         
         if (enquiries.isEmpty()) {
@@ -397,11 +442,37 @@ public class HDBManagerMenu {
         }
 
         System.out.println("\nEnquiries:");
-        for (Enquiry enquiry : enquiries) {
-            System.out.printf("From: %s%nContent: %s%nReply: %s%n%n",
+        for (int i = 0; i < enquiries.size(); i++) {
+            Enquiry enquiry = enquiries.get(i);
+            System.out.printf("%d. From: %s%n   Content: %s%n   Reply: %s%n%n",
+                i + 1,
                 enquiry.getCreator().getNric(),
                 enquiry.getContent(),
                 enquiry.getReply() != null ? enquiry.getReply() : "No reply yet");
+        }
+
+        if (manager.getManagedProjects().contains(selected)) {
+            System.out.print("Enter enquiry number to reply (0 to go back): ");
+            int enquiryNum = scanner.nextInt();
+            scanner.nextLine();
+
+            if (enquiryNum > 0 && enquiryNum <= enquiries.size()) {
+                Enquiry selectedEnquiry = enquiries.get(enquiryNum - 1);
+                if (selectedEnquiry.hasReply()) {
+                    System.out.println("This enquiry has already been replied to.");
+                } else {
+                    System.out.print("Enter your reply: ");
+                    String reply = scanner.nextLine();
+                    if (enquiryManager.replyToEnquiry(selectedEnquiry.getId(), reply, manager)) {
+                        System.out.println("Reply submitted successfully!");
+                    } else {
+                        System.out.println("Failed to submit reply.");
+                    }
+                }
+            }
+        } else {
+            System.out.println("\nPress Enter to go back...");
+            scanner.nextLine();
         }
     }
 

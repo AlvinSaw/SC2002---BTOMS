@@ -6,6 +6,7 @@ import enums.*;
 import java.util.*;
 import java.io.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 
 public class ApplicantMenu {
     protected Scanner scanner = new Scanner(System.in);
@@ -73,18 +74,107 @@ public class ApplicantMenu {
             return;
         }
 
+        // 过滤出符合条件的项目
+        List<BTOProject> eligibleProjects = new ArrayList<>();
+        for (BTOProject project : projects) {
+            // 检查项目是否对用户可见
+            if (!project.isVisible()) {
+                continue;
+            }
+
+            // 检查用户年龄和婚姻状态
+            if (applicant.getMaritalStatus() == MaritalStatus.SINGLE) {
+                // 单身人士必须35岁以上
+                if (applicant.getAge() < 35) {
+                    continue;
+                }
+                // 单身人士只能申请2房式
+                if (!project.getFlatUnits().containsKey(FlatType.TWO_ROOM)) {
+                    continue;
+                }
+            } else {
+                // 已婚人士必须21岁以上
+                if (applicant.getAge() < 21) {
+                    continue;
+                }
+            }
+
+            eligibleProjects.add(project);
+        }
+
+        if (eligibleProjects.isEmpty()) {
+            System.out.println("No available projects found that match your eligibility criteria.");
+            if (applicant.getMaritalStatus() == MaritalStatus.SINGLE && applicant.getAge() < 35) {
+                System.out.println("As a single applicant, you must be 35 years or older to apply.");
+            } else if (applicant.getMaritalStatus() == MaritalStatus.MARRIED && applicant.getAge() < 21) {
+                System.out.println("As a married applicant, you must be 21 years or older to apply.");
+            }
+            return;
+        }
+
+        // 显示排序/筛选选项
+        System.out.println("\nSort/Filter Options:");
+        System.out.println("1. Sort by Neighborhood (A-Z)");
+        System.out.println("2. Sort by Available Units (High to Low)");
+        System.out.println("3. Filter by Neighborhood");
+        System.out.println("4. View All Projects");
+        System.out.print("Enter your choice: ");
+        
+        int sortChoice = scanner.nextInt();
+        scanner.nextLine();
+
+        List<BTOProject> displayProjects = new ArrayList<>(eligibleProjects);
+
+        switch (sortChoice) {
+            case 1:
+                // 按地区名称排序
+                displayProjects.sort(Comparator.comparing(BTOProject::getNeighborhood));
+                break;
+            case 2:
+                // 按可用单位总数排序
+                displayProjects.sort((p1, p2) -> {
+                    int total1 = p1.getRemainingUnits().values().stream().mapToInt(Integer::intValue).sum();
+                    int total2 = p2.getRemainingUnits().values().stream().mapToInt(Integer::intValue).sum();
+                    return Integer.compare(total2, total1); // 降序排序
+                });
+                break;
+            case 3:
+                // 按地区筛选
+                System.out.print("Enter neighborhood to filter (leave empty to cancel): ");
+                String filterNeighborhood = scanner.nextLine().trim();
+                if (!filterNeighborhood.isEmpty()) {
+                    displayProjects.removeIf(p -> !p.getNeighborhood().equalsIgnoreCase(filterNeighborhood));
+                }
+                break;
+            case 4:
+                // 保持原顺序
+                break;
+            default:
+                System.out.println("Invalid choice. Showing all projects.");
+        }
+
+        if (displayProjects.isEmpty()) {
+            System.out.println("No projects match your filter criteria.");
+            return;
+        }
+
         System.out.println("\nAvailable Projects:");
-        for (int i = 0; i < projects.size(); i++) {
-            BTOProject project = projects.get(i);
-            System.out.printf("%d. %s (%s)%n", i + 1, project.getProjectName(), project.getNeighborhood());
+        for (int i = 0; i < displayProjects.size(); i++) {
+            BTOProject project = displayProjects.get(i);
+            int totalUnits = project.getRemainingUnits().values().stream().mapToInt(Integer::intValue).sum();
+            System.out.printf("%d. %s (%s) - Available Units: %d%n", 
+                i + 1, 
+                project.getProjectName(), 
+                project.getNeighborhood(),
+                totalUnits);
         }
 
         System.out.print("Enter project number to view details (0 to go back): ");
         int choice = scanner.nextInt();
         scanner.nextLine(); 
 
-        if (choice > 0 && choice <= projects.size()) {
-            BTOProject selected = projects.get(choice - 1);
+        if (choice > 0 && choice <= displayProjects.size()) {
+            BTOProject selected = displayProjects.get(choice - 1);
             viewProjectDetails(selected);
         }
     }
@@ -103,7 +193,15 @@ public class ApplicantMenu {
             }
         }
 
-        if (applicant.getCurrentApplication() == null) {
+        if (applicant.getCurrentApplication() != null) {
+            System.out.println("\nYou already have an active application for another project.");
+            System.out.println("Would you like to view your current application? (Y/N): ");
+            String choice = scanner.nextLine();
+            
+            if (choice.equalsIgnoreCase("Y")) {
+                viewMyApplication();
+            }
+        } else {
             System.out.print("\nWould you like to apply for this project? (Y/N): ");
             String choice = scanner.nextLine();
             
@@ -114,14 +212,32 @@ public class ApplicantMenu {
     }
 
     protected void applyForProject(BTOProject project) {
+        // 检查是否已经有申请
+        if (applicant.getCurrentApplication() != null) {
+            System.out.println("You already have an active application. You cannot apply for multiple projects.");
+            return;
+        }
+
+        // 检查年龄和婚姻状态要求
+        if (applicant.getMaritalStatus() == MaritalStatus.SINGLE && applicant.getAge() < 35) {
+            System.out.println("As a single applicant, you must be 35 years or older to apply.");
+            return;
+        } else if (applicant.getMaritalStatus() == MaritalStatus.MARRIED && applicant.getAge() < 21) {
+            System.out.println("As a married applicant, you must be 21 years or older to apply.");
+            return;
+        }
+
         System.out.println("\nSelect Flat Type:");
         List<FlatType> availableTypes = new ArrayList<>();
         
         for (FlatType type : project.getFlatUnits().keySet()) {
-            if (applicant.canApplyForFlatType(type)) {
-                availableTypes.add(type);
-                System.out.printf("%d. %s%n", availableTypes.size(), type.getDisplayName());
+            // 单身人士只能申请2房式
+            if (applicant.getMaritalStatus() == MaritalStatus.SINGLE && type != FlatType.TWO_ROOM) {
+                continue;
             }
+            // 已婚人士可以申请所有房型
+            availableTypes.add(type);
+            System.out.printf("%d. %s%n", availableTypes.size(), type.getDisplayName());
         }
 
         if (availableTypes.isEmpty()) {
@@ -252,23 +368,46 @@ public class ApplicantMenu {
 
         System.out.println("\nSelect Project:");
         for (int i = 0; i < projects.size(); i++) {
-            System.out.printf("%d. %s%n", i + 1, projects.get(i).getProjectName());
+            BTOProject project = projects.get(i);
+            if (applicant instanceof HDBOfficer) {
+                HDBOfficer officer = (HDBOfficer) applicant;
+                if (officer.getAssignedProject() != null && officer.getAssignedProject().equals(project)) {
+                    continue;
+                }
+            }
+            System.out.printf("%d. %s%n", i + 1, project.getProjectName());
+        }
+        System.out.println("0. Go Back");
+
+        System.out.print("Enter project number: ");
+        int projectNum = scanner.nextInt();
+        scanner.nextLine();
+
+        if (projectNum == 0) {
+            return;
         }
 
-        System.out.print("Enter project number (0 to cancel): ");
-        int choice = scanner.nextInt();
-        scanner.nextLine(); 
+        if (projectNum < 1 || projectNum > projects.size()) {
+            System.out.println("Invalid project number.");
+            return;
+        }
 
-        if (choice > 0 && choice <= projects.size()) {
-            System.out.print("Enter your enquiry: ");
-            String content = scanner.nextLine();
-            
-            Enquiry enquiry = enquiryManager.createEnquiry(applicant, projects.get(choice - 1), content);
-            if (enquiry != null) {
-                System.out.println("Enquiry created successfully!");
-            } else {
-                System.out.println("Failed to create enquiry.");
+        BTOProject selected = projects.get(projectNum - 1);
+        if (applicant instanceof HDBOfficer) {
+            HDBOfficer officer = (HDBOfficer) applicant;
+            if (officer.getAssignedProject() != null && officer.getAssignedProject().equals(selected)) {
+                System.out.println("You cannot create an enquiry for your assigned project.");
+                return;
             }
+        }
+
+        System.out.print("Enter your enquiry: ");
+        String content = scanner.nextLine();
+
+        if (enquiryManager.createEnquiry(applicant, selected, content) != null) {
+            System.out.println("Enquiry created successfully!");
+        } else {
+            System.out.println("Failed to create enquiry.");
         }
     }
 
@@ -297,12 +436,46 @@ public class ApplicantMenu {
             return;
         }
 
-        String receipt = applicationManager.generateReceipt(application, null);
-        if (receipt != null) {
-            System.out.println("\n=== Receipt ===");
-            System.out.println(receipt);
-        } else {
-            System.out.println("Failed to generate receipt.");
+        // 生成收据内容
+        StringBuilder receipt = new StringBuilder();
+        receipt.append("=== HDB Flat Booking Receipt ===\n\n");
+        receipt.append("Applicant Details:\n");
+        receipt.append("Name: ").append(applicant.getName()).append("\n");
+        receipt.append("NRIC: ").append(applicant.getNric()).append("\n");
+        receipt.append("Age: ").append(applicant.getAge()).append("\n");
+        receipt.append("Marital Status: ").append(applicant.getMaritalStatus()).append("\n\n");
+        
+        receipt.append("Project Details:\n");
+        receipt.append("Project Name: ").append(application.getProject().getProjectName()).append("\n");
+        receipt.append("Location: ").append(application.getProject().getNeighborhood()).append("\n");
+        receipt.append("Flat Type: ").append(application.getSelectedFlatType().getDisplayName()).append("\n\n");
+        
+        receipt.append("Booking Details:\n");
+        receipt.append("Booking Date: ").append(application.getApplicationDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a"))).append("\n");
+        receipt.append("Status: ").append(application.getStatus()).append("\n\n");
+        
+        receipt.append("Please bring this receipt to your appointment with the HDB officer.\n");
+        receipt.append("This receipt serves as proof of your flat booking.");
+
+        // 创建输出目录
+        File outputDir = new File("output_applicant");
+        if (!outputDir.exists()) {
+            outputDir.mkdirs();
+        }
+
+        // 生成文件名
+        String fileName = "receipt_" + applicant.getNric() + "_" + 
+                         application.getProject().getProjectName().replace(" ", "_") + ".txt";
+        File receiptFile = new File(outputDir, fileName);
+
+        // 保存收据到文件
+        try (PrintWriter writer = new PrintWriter(new FileWriter(receiptFile))) {
+            writer.println(receipt.toString());
+            System.out.println("\nReceipt has been generated and saved as: " + receiptFile.getAbsolutePath());
+            System.out.println("Please bring this receipt to your appointment with the HDB officer.");
+        } catch (IOException e) {
+            System.out.println("Failed to generate receipt file.");
+            e.printStackTrace();
         }
     }
 

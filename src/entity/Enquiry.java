@@ -45,4 +45,8 @@ public class Enquiry {
     public boolean hasReply() {
         return reply != null;
     }
+
+    public void setReply(String reply) {
+        this.reply = reply;
+    }
 } 
