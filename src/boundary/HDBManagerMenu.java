@@ -89,12 +89,18 @@ public class HDBManagerMenu {
             flatUnits.put(type, units);
         }
         
+        LocalDate now = LocalDate.now();
         LocalDate openDate = null;
         LocalDate closeDate = null;
+        
         while (openDate == null) {
             System.out.print("Enter application open date (yyyy-MM-dd): ");
             try {
                 openDate = LocalDate.parse(scanner.nextLine(), DATE_FORMAT);
+                if (openDate.isBefore(now)) {
+                    System.out.println("Open date cannot be before today.");
+                    openDate = null;
+                }
             } catch (DateTimeParseException e) {
                 System.out.println("Invalid date format. Please use yyyy-MM-dd.");
             }
@@ -112,8 +118,12 @@ public class HDBManagerMenu {
                 System.out.println("Invalid date format. Please use yyyy-MM-dd.");
             }
         }
+
+        System.out.print("Enter maximum number of officers for this project: ");
+        int maxOfficerSlots = scanner.nextInt();
+        scanner.nextLine();
         
-        BTOProject project = new BTOProject(name, neighborhood, flatUnits, openDate, closeDate, manager);
+        BTOProject project = new BTOProject(name, neighborhood, flatUnits, openDate, closeDate, manager, maxOfficerSlots);
         if (manager.canHandleNewProject(project)) {
             projectManager.addProject(project);
             manager.addCreatedProject(project);
@@ -142,7 +152,7 @@ public class HDBManagerMenu {
 
         if (choice > 0 && choice <= projects.size()) {
             BTOProject selected = projects.get(choice - 1);
-            viewProjectDetails(selected);
+            viewProjectDetails(selected, false);
         }
     }
 
@@ -165,11 +175,11 @@ public class HDBManagerMenu {
 
         if (choice > 0 && choice <= projects.size()) {
             BTOProject selected = projects.get(choice - 1);
-            viewProjectDetails(selected);
+            viewProjectDetails(selected, true);
         }
     }
 
-    private void viewProjectDetails(BTOProject project) {
+    private void viewProjectDetails(BTOProject project, boolean isOwnedProject) {
         System.out.println("\nProject Details:");
         System.out.println("Name: " + project.getProjectName());
         System.out.println("Neighborhood: " + project.getNeighborhood());
@@ -197,27 +207,32 @@ public class HDBManagerMenu {
             }
         }
 
-        System.out.println("\n1. Toggle Project Visibility");
-        System.out.println("2. Edit Project Details");
-        System.out.println("3. Go Back");
-        System.out.print("Choose an option: ");
-        
-        int choice = scanner.nextInt();
-        scanner.nextLine();
-        
-        switch (choice) {
-            case 1:
-                project.setVisible(!project.isVisible());
-                projectManager.saveProjects();
-                System.out.println("Project visibility toggled successfully!");
-                break;
-            case 2:
-                editProjectDetails(project);
-                break;
-            case 3:
-                return;
-            default:
-                System.out.println("Invalid option.");
+        if (isOwnedProject) {
+            System.out.println("\n1. Toggle Project Visibility");
+            System.out.println("2. Edit Project Details");
+            System.out.println("3. Go Back");
+            System.out.print("Choose an option: ");
+            
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+            
+            switch (choice) {
+                case 1:
+                    project.setVisible(!project.isVisible());
+                    projectManager.saveProjects();
+                    System.out.println("Project visibility toggled successfully!");
+                    break;
+                case 2:
+                    editProjectDetails(project);
+                    break;
+                case 3:
+                    return;
+                default:
+                    System.out.println("Invalid option.");
+            }
+        } else {
+            System.out.println("\nPress Enter to go back...");
+            scanner.nextLine();
         }
     }
 
@@ -316,10 +331,15 @@ public class HDBManagerMenu {
         for (int i = 0; i < projects.size(); i++) {
             System.out.printf("%d. %s%n", i + 1, projects.get(i).getProjectName());
         }
+        System.out.println("0. Go Back");
 
         System.out.print("Enter project number: ");
         int projectNum = scanner.nextInt();
         scanner.nextLine();
+
+        if (projectNum == 0) {
+            return;
+        }
 
         if (projectNum < 1 || projectNum > projects.size()) {
             System.out.println("Invalid project number.");
@@ -342,6 +362,9 @@ public class HDBManagerMenu {
                 app.getStatus(),
                 app.isWithdrawalRequested() ? " (Withdrawal Requested)" : "");
         }
+        
+        System.out.println("\nPress Enter to go back...");
+        scanner.nextLine();
     }
 
     private void viewProjectEnquiries() {

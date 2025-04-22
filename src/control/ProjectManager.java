@@ -41,17 +41,8 @@ public class ProjectManager {
                 LocalDate closeDate = LocalDate.parse(parts[4], DATE_FORMAT);
                 HDBManager manager = (HDBManager) UserManager.getInstance().getUser(parts[5]);
                 
-                BTOProject project = new BTOProject(projectName, neighborhood, flatUnits, openDate, closeDate, manager);
+                BTOProject project = new BTOProject(projectName, neighborhood, flatUnits, openDate, closeDate, manager, Integer.parseInt(parts[7]));
                 project.setVisible(Boolean.parseBoolean(parts[6]));
-                
-                if (parts.length > 7) {
-                    try {
-                        int maxOfficerSlots = Integer.parseInt(parts[7]);
-                        project.setMaxOfficerSlots(maxOfficerSlots);
-                    } catch (NumberFormatException e) {
-                        //set default
-                    }
-                }
                 
                 if (parts.length > 8 && !parts[8].isEmpty()) {
                     String[] officerIds = parts[8].split(",");

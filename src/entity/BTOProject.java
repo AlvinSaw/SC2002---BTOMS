@@ -19,7 +19,7 @@ public class BTOProject {
     private int maxOfficerSlots;
     
     public BTOProject(String projectName, String neighborhood, Map<FlatType, Integer> flatUnits,
-                     LocalDate openDate, LocalDate closeDate, HDBManager manager) {
+                     LocalDate openDate, LocalDate closeDate, HDBManager manager, int maxOfficerSlots) {
         this.projectName = projectName;
         this.neighborhood = neighborhood;
         this.flatUnits = new HashMap<>(flatUnits);
@@ -31,7 +31,7 @@ public class BTOProject {
         this.applications = new ArrayList<>();
         this.enquiries = new ArrayList<>();
         this.visible = false;
-        this.maxOfficerSlots = 10;
+        this.maxOfficerSlots = maxOfficerSlots;
     }
 
     public String getProjectName() { return projectName; }

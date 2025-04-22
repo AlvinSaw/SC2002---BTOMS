@@ -68,9 +68,12 @@ public class HDBManager extends User implements IProjectManageable {
     }
 
     public boolean canHandleNewProject(BTOProject newProject) {
-        if (currentProject == null) return true;
-        
-        return !currentProject.isApplicationPeriodOverlapping(newProject);
+        for (BTOProject project : managedProjects) {
+            if (project.isApplicationPeriodOverlapping(newProject)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
