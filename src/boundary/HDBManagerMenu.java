@@ -612,8 +612,30 @@ public class HDBManagerMenu {
             
             TablePrinter.printTable(headers, data);
             
+            // Display detailed view of enquiries with replies
+            boolean hasReplies = false;
+            System.out.println("\nDetailed Enquiries with Replies:");
+            for (int i = 0; i < enquiries.size(); i++) {
+                Enquiry enquiry = enquiries.get(i);
+                if (enquiry.hasReply()) {
+                    hasReplies = true;
+                    System.out.println("\nEnquiry #" + (i + 1) + ":");
+                    String[] detailHeaders = {"Property", "Value"};
+                    String[][] detailData = {
+                        {"From", enquiry.getCreator().getNric() + " (" + enquiry.getCreator().getName() + ")"},
+                        {"Enquiry", enquiry.getContent()},
+                        {"Reply", enquiry.getReply()}
+                    };
+                    TablePrinter.printTable(detailHeaders, detailData);
+                }
+            }
+            
+            if (!hasReplies) {
+                System.out.println("No replied enquiries found.");
+            }
+            
             if (manager.getManagedProjects().contains(selected)) {
-                System.out.print("Enter enquiry number to reply (0 to go back): ");
+                System.out.print("\nEnter enquiry number to reply (0 to go back): ");
                 try {
                     int enquiryNum = scanner.nextInt();
                     scanner.nextLine();
