@@ -74,26 +74,26 @@ public class ApplicantMenu {
             return;
         }
 
-        // 过滤出符合条件的项目
+        // Filter eligible projects
         List<BTOProject> eligibleProjects = new ArrayList<>();
         for (BTOProject project : projects) {
-            // 检查项目是否对用户可见
+            // Check if project is visible
             if (!project.isVisible()) {
                 continue;
             }
 
-            // 检查用户年龄和婚姻状态
+            // Check user's age and marital status
             if (applicant.getMaritalStatus() == MaritalStatus.SINGLE) {
-                // 单身人士必须35岁以上
+                // Single applicants must be 35 or older
                 if (applicant.getAge() < 35) {
                     continue;
                 }
-                // 单身人士只能申请2房式
+                // Single applicants can only apply for 2-room flats
                 if (!project.getFlatUnits().containsKey(FlatType.TWO_ROOM)) {
                     continue;
                 }
             } else {
-                // 已婚人士必须21岁以上
+                // Married applicants must be 21 or older
                 if (applicant.getAge() < 21) {
                     continue;
                 }
@@ -112,7 +112,7 @@ public class ApplicantMenu {
             return;
         }
 
-        // 显示排序/筛选选项
+        // Display sort/filter options
         System.out.println("\nSort/Filter Options:");
         System.out.println("1. Sort by Neighborhood (A-Z)");
         System.out.println("2. Sort by Available Units (High to Low)");
@@ -127,19 +127,19 @@ public class ApplicantMenu {
 
         switch (sortChoice) {
             case 1:
-                // 按地区名称排序
+                // Sort by neighborhood name
                 displayProjects.sort(Comparator.comparing(BTOProject::getNeighborhood));
                 break;
             case 2:
-                // 按可用单位总数排序
+                // Sort by total available units
                 displayProjects.sort((p1, p2) -> {
                     int total1 = p1.getRemainingUnits().values().stream().mapToInt(Integer::intValue).sum();
                     int total2 = p2.getRemainingUnits().values().stream().mapToInt(Integer::intValue).sum();
-                    return Integer.compare(total2, total1); // 降序排序
+                    return Integer.compare(total2, total1); // Descending order
                 });
                 break;
             case 3:
-                // 按地区筛选
+                // Filter by neighborhood
                 System.out.print("Enter neighborhood to filter (leave empty to cancel): ");
                 String filterNeighborhood = scanner.nextLine().trim();
                 if (!filterNeighborhood.isEmpty()) {
@@ -147,7 +147,7 @@ public class ApplicantMenu {
                 }
                 break;
             case 4:
-                // 保持原顺序
+                // Keep original order
                 break;
             default:
                 System.out.println("Invalid choice. Showing all projects.");
@@ -212,13 +212,13 @@ public class ApplicantMenu {
     }
 
     protected void applyForProject(BTOProject project) {
-        // 检查是否已经有申请
+        // Check if user already has an active application
         if (applicant.getCurrentApplication() != null) {
             System.out.println("You already have an active application. You cannot apply for multiple projects.");
             return;
         }
 
-        // 检查年龄和婚姻状态要求
+        // Check age and marital status requirements
         if (applicant.getMaritalStatus() == MaritalStatus.SINGLE && applicant.getAge() < 35) {
             System.out.println("As a single applicant, you must be 35 years or older to apply.");
             return;
@@ -231,11 +231,11 @@ public class ApplicantMenu {
         List<FlatType> availableTypes = new ArrayList<>();
         
         for (FlatType type : project.getFlatUnits().keySet()) {
-            // 单身人士只能申请2房式
+            // Single applicants can only apply for 2-room flats
             if (applicant.getMaritalStatus() == MaritalStatus.SINGLE && type != FlatType.TWO_ROOM) {
                 continue;
             }
-            // 已婚人士可以申请所有房型
+            // Married applicants can apply for all flat types
             availableTypes.add(type);
             System.out.printf("%d. %s%n", availableTypes.size(), type.getDisplayName());
         }
@@ -436,7 +436,7 @@ public class ApplicantMenu {
             return;
         }
 
-        // 生成收据内容
+        // Generate receipt content
         StringBuilder receipt = new StringBuilder();
         receipt.append("=== HDB Flat Booking Receipt ===\n\n");
         receipt.append("Applicant Details:\n");
@@ -457,18 +457,18 @@ public class ApplicantMenu {
         receipt.append("Please bring this receipt to your appointment with the HDB officer.\n");
         receipt.append("This receipt serves as proof of your flat booking.");
 
-        // 创建输出目录
+        // Create output directory
         File outputDir = new File("output_applicant");
         if (!outputDir.exists()) {
             outputDir.mkdirs();
         }
 
-        // 生成文件名
+        // Generate filename
         String fileName = "receipt_" + applicant.getNric() + "_" + 
                          application.getProject().getProjectName().replace(" ", "_") + ".txt";
         File receiptFile = new File(outputDir, fileName);
 
-        // 保存收据到文件
+        // Save receipt to file
         try (PrintWriter writer = new PrintWriter(new FileWriter(receiptFile))) {
             writer.println(receipt.toString());
             System.out.println("\nReceipt has been generated and saved as: " + receiptFile.getAbsolutePath());
