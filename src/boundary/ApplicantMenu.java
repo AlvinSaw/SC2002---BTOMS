@@ -271,9 +271,19 @@ public class ApplicantMenu {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
         String formattedDate = application.getApplicationDate().format(formatter);
 
-        System.out.println("\nMy Application:");
+        System.out.println("\n====== MY APPLICATION DETAILS ======");
         System.out.println("Project: " + application.getProject().getProjectName());
-        System.out.println("Flat Type: " + application.getSelectedFlatType().getDisplayName());
+        
+        // For BOOKED applications, show both original and assigned flat types
+        if (application.getStatus() == ApplicationStatus.BOOKED && application.getAssignedFlatType() != null) {
+            System.out.println("Originally Applied For: " + application.getSelectedFlatType().getDisplayName());
+            System.out.println("-----------------------------------");
+            System.out.println("ASSIGNED FLAT TYPE: " + application.getAssignedFlatType().getDisplayName());
+            System.out.println("-----------------------------------");
+        } else {
+            System.out.println("Flat Type: " + application.getSelectedFlatType().getDisplayName());
+        }
+        
         System.out.println("Status: " + application.getStatus());
         System.out.println("Application Date: " + formattedDate);
         
@@ -448,7 +458,11 @@ public class ApplicantMenu {
         receipt.append("Project Details:\n");
         receipt.append("Project Name: ").append(application.getProject().getProjectName()).append("\n");
         receipt.append("Location: ").append(application.getProject().getNeighborhood()).append("\n");
-        receipt.append("Flat Type: ").append(application.getSelectedFlatType().getDisplayName()).append("\n\n");
+        
+        // Use assigned flat type if available, otherwise use selected type
+        FlatType flatTypeToShow = application.getAssignedFlatType() != null ? 
+            application.getAssignedFlatType() : application.getSelectedFlatType();
+        receipt.append("Flat Type: ").append(flatTypeToShow.getDisplayName()).append("\n\n");
         
         receipt.append("Booking Details:\n");
         receipt.append("Booking Date: ").append(application.getApplicationDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a"))).append("\n");

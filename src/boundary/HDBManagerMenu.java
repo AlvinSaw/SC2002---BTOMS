@@ -694,7 +694,7 @@ public class HDBManagerMenu {
     
     private void processApplicationStatus(List<BTOApplication> applications, BTOProject project) {
         System.out.println("\nProcess Application Status:");
-        System.out.println("As a manager, you can change application status from UNSUCCESSFUL to SUCCESSFUL.");
+    
         System.out.print("Enter application number: ");
         
         try {

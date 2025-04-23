@@ -10,6 +10,7 @@ public class BTOApplication {
     private ApplicationStatus status;
     private LocalDateTime applicationDate;
     private FlatType selectedFlatType;
+    private FlatType assignedFlatType; // New property for the assigned flat type
     private boolean withdrawalRequested;
 
     public BTOApplication(Applicant applicant, BTOProject project, FlatType selectedFlatType) {
@@ -18,6 +19,7 @@ public class BTOApplication {
         this.status = ApplicationStatus.PENDING;
         this.applicationDate = LocalDateTime.now();
         this.selectedFlatType = selectedFlatType;
+        this.assignedFlatType = null; // Initially null until assigned by officer
         this.withdrawalRequested = false;
     }
 
@@ -26,7 +28,13 @@ public class BTOApplication {
     public ApplicationStatus getStatus() { return status; }
     public LocalDateTime getApplicationDate() { return applicationDate; }
     public FlatType getSelectedFlatType() { return selectedFlatType; }
+    public FlatType getAssignedFlatType() { return assignedFlatType; } // Getter for assigned flat type
     public boolean isWithdrawalRequested() { return withdrawalRequested; }
+    
+    // Returns the actual flat type (assigned if available, otherwise selected)
+    public FlatType getActualFlatType() {
+        return assignedFlatType != null ? assignedFlatType : selectedFlatType;
+    }
 
     public void setStatus(ApplicationStatus status) {
         this.status = status;
@@ -56,6 +64,11 @@ public class BTOApplication {
 
     public void setSelectedFlatType(FlatType flatType) {
         this.selectedFlatType = flatType;
+    }
+    
+    // New method to set the assigned flat type by officer
+    public void setAssignedFlatType(FlatType flatType) {
+        this.assignedFlatType = flatType;
     }
 
     public String getProjectName() {
