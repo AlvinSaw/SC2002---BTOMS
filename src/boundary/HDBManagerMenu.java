@@ -251,29 +251,44 @@ public class HDBManagerMenu {
         }
 
         System.out.println("\nMy Projects:");
+        System.out.println("Sorting Options:");
+        System.out.println("1. Default order (sort by date)");
+        System.out.println("2. Alphabetical order (A-Z)");
+        System.out.print("Choose sorting option: ");
         
-        // Use a simpler format for dates to ensure better alignment
-        DateTimeFormatter displayFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        
-        String[] headers = {"No.", "Project Name", "Neighborhood", "Status", "Application Period"};
-        String[][] data = new String[projects.size()][5];
-        
-        for (int i = 0; i < projects.size(); i++) {
-            BTOProject project = projects.get(i);
-            String openDate = project.getApplicationOpenDate().format(displayFormat);
-            String closeDate = project.getApplicationCloseDate().format(displayFormat);
-            
-            data[i][0] = String.valueOf(i + 1);
-            data[i][1] = project.getProjectName();
-            data[i][2] = project.getNeighborhood();
-            data[i][3] = project.isVisible() ? "Visible" : "Hidden";
-            data[i][4] = openDate + " - " + closeDate;
-        }
-        
-        TablePrinter.printTable(headers, data);
-
-        System.out.print("Enter project number to view details (0 to go back): ");
         try {
+            int sortOption = scanner.nextInt();
+            scanner.nextLine();
+            
+            if (sortOption == 2) {
+                // Sort projects alphabetically by name
+                projects.sort(Comparator.comparing(BTOProject::getProjectName));
+                System.out.println("\nProjects sorted alphabetically (A-Z)");
+            } else {
+                System.out.println("\nProjects in default order (sorted by date)");
+            }
+            
+            // Use a simpler format for dates to ensure better alignment
+            DateTimeFormatter displayFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            
+            String[] headers = {"No.", "Project Name", "Neighborhood", "Status", "Application Period"};
+            String[][] data = new String[projects.size()][5];
+            
+            for (int i = 0; i < projects.size(); i++) {
+                BTOProject project = projects.get(i);
+                String openDate = project.getApplicationOpenDate().format(displayFormat);
+                String closeDate = project.getApplicationCloseDate().format(displayFormat);
+                
+                data[i][0] = String.valueOf(i + 1);
+                data[i][1] = project.getProjectName();
+                data[i][2] = project.getNeighborhood();
+                data[i][3] = project.isVisible() ? "Visible" : "Hidden";
+                data[i][4] = openDate + " - " + closeDate;
+            }
+            
+            TablePrinter.printTable(headers, data);
+
+            System.out.print("Enter project number to view details (0 to go back): ");
             int choice = scanner.nextInt();
             scanner.nextLine();
 
@@ -282,7 +297,7 @@ public class HDBManagerMenu {
                 viewProjectDetails(selected, true);
             }
         } catch (InputMismatchException e) {
-            System.out.println("Invalid input. Please enter a valid project number.");
+            System.out.println("Invalid input. Please enter a valid number.");
             scanner.nextLine();
         }
     }
@@ -890,15 +905,16 @@ public class HDBManagerMenu {
     }
 
     private void viewProjectEnquiries() {
-        List<BTOProject> allProjects = projectManager.getAllProjects();
-        if (allProjects.isEmpty()) {
-            System.out.println("No projects available.");
+        // Change to use manager's created projects instead of all projects
+        List<BTOProject> projects = manager.getManagedProjects();
+        if (projects.isEmpty()) {
+            System.out.println("You have no projects.");
             return;
         }
 
         System.out.println("\nSelect Project:");
-        for (int i = 0; i < allProjects.size(); i++) {
-            System.out.printf("%d. %s%n", i + 1, allProjects.get(i).getProjectName());
+        for (int i = 0; i < projects.size(); i++) {
+            System.out.printf("%d. %s%n", i + 1, projects.get(i).getProjectName());
         }
         System.out.println("0. Go Back");
 
@@ -911,12 +927,12 @@ public class HDBManagerMenu {
                 return;
             }
 
-            if (projectNum < 1 || projectNum > allProjects.size()) {
+            if (projectNum < 1 || projectNum > projects.size()) {
                 System.out.println("Invalid project number.");
                 return;
             }
 
-            BTOProject selected = allProjects.get(projectNum - 1);
+            BTOProject selected = projects.get(projectNum - 1);
             List<Enquiry> enquiries = enquiryManager.getEnquiriesForProject(selected.getProjectName());
             
             if (enquiries.isEmpty()) {
@@ -959,6 +975,8 @@ public class HDBManagerMenu {
                 System.out.println("No replied enquiries found.");
             }
             
+            // Since we're now only showing projects the manager owns, this check is redundant
+            // but keeping it for safety
             if (manager.getManagedProjects().contains(selected)) {
                 System.out.print("\nEnter enquiry number to reply (0 to go back): ");
                 try {
