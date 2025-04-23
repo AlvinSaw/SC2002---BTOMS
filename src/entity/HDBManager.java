@@ -25,6 +25,15 @@ public class HDBManager extends User implements IProjectManageable {
     public void addCreatedProject(BTOProject project) {
         this.managedProjects.add(project);
     }
+    
+    /**
+     * Removes a project from the manager's list of managed projects
+     * @param project The project to remove
+     * @return true if the project was removed, false if it wasn't in the list
+     */
+    public boolean removeCreatedProject(BTOProject project) {
+        return this.managedProjects.remove(project);
+    }
 
     public BTOProject getCurrentProject() {
         return currentProject;
@@ -80,4 +89,4 @@ public class HDBManager extends User implements IProjectManageable {
     public UserType getUserType() {
         return UserType.HDB_MANAGER;
     }
-} 
+}

@@ -341,7 +341,8 @@ public class HDBManagerMenu {
         if (isOwnedProject) {
             System.out.println("\n1. Toggle Project Visibility");
             System.out.println("2. Edit Project Details");
-            System.out.println("3. Go Back");
+            System.out.println("3. Delete Project");
+            System.out.println("4. Go Back");
             System.out.print("Choose an option: ");
             
             try {
@@ -369,6 +370,9 @@ public class HDBManagerMenu {
                         editProjectDetails(project);
                         break;
                     case 3:
+                        deleteProject(project);
+                        break;
+                    case 4:
                         return;
                     default:
                         System.out.println("Invalid option.");
@@ -380,6 +384,74 @@ public class HDBManagerMenu {
         } else {
             System.out.println("\nPress Enter to go back...");
             scanner.nextLine();
+        }
+    }
+    
+    private void deleteProject(BTOProject project) {
+        LocalDate now = LocalDate.now();
+        
+        // Check if project is currently open for applications - don't allow deletion
+        if (project.isApplicationOpen()) {
+            System.out.println("\nError: Cannot delete a project that is currently open for applications.");
+            System.out.println("This project is accepting applications until " + 
+                              project.getApplicationCloseDate().format(DATE_FORMAT) + ".");
+            System.out.println("Please try again after the application period has ended.");
+            return;
+        }
+        
+        // Check if project has applications and it's not yet closed
+        List<BTOApplication> applications = applicationManager.getApplicationsForProject(project.getProjectName());
+        if (!applications.isEmpty() && now.isBefore(project.getApplicationCloseDate())) {
+            System.out.println("\nError: Cannot delete a project that has applications before its closing date.");
+            System.out.println("This project has " + applications.size() + " application(s) and closes on " + 
+                              project.getApplicationCloseDate().format(DATE_FORMAT) + ".");
+            return;
+        }
+        
+        // Project deletion is allowed if:
+        // 1. The project hasn't opened yet (future project), or
+        // 2. The project's application period has ended (closed project)
+        
+        String projectStatus;
+        if (now.isBefore(project.getApplicationOpenDate())) {
+            projectStatus = "unopened (future)";
+        } else if (now.isAfter(project.getApplicationCloseDate())) {
+            projectStatus = "closed";
+        } else {
+            projectStatus = "unknown state";  // This should not happen due to earlier checks
+        }
+        
+        System.out.println("\nThis " + projectStatus + " project can be deleted.");
+        
+        // Check if the project has any applications
+        if (!applications.isEmpty()) {
+            System.out.println("Warning: This project has " + applications.size() + " applications.");
+            System.out.println("Deleting this project will affect these applications.");
+        }
+        
+        System.out.print("\nAre you sure you want to delete this project? (Y/N): ");
+        String confirmation = scanner.nextLine();
+        
+        if (confirmation.equalsIgnoreCase("Y")) {
+            // Ask for password confirmation for security
+            System.out.print("Enter your password to confirm deletion: ");
+            String password = scanner.nextLine();
+            
+            // Use login to verify the password instead of the non-existent verifyPassword method
+            if (UserManager.getInstance().login(manager.getNric(), password)) {
+                // Use ProjectManager's deleteProject method instead of handling deletion directly
+                if (projectManager.deleteProject(project.getProjectName())) {
+                    System.out.println("\nProject '" + project.getProjectName() + "' has been deleted successfully.");
+                } else {
+                    System.out.println("Failed to delete the project. Please try again later.");
+                }
+                // Re-login as the current user since we used login for verification
+                UserManager.getInstance().login(manager.getNric(), password);
+            } else {
+                System.out.println("Incorrect password. Project deletion cancelled.");
+            }
+        } else {
+            System.out.println("Project deletion cancelled.");
         }
     }
 

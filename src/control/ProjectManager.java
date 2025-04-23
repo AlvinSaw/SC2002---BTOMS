@@ -169,7 +169,34 @@ public class ProjectManager {
 
     public boolean deleteProject(String projectName) {
         BTOProject project = getProject(projectName);
-        if (project != null && project.getApplications().isEmpty()) {
+        if (project != null) {
+            // Release all assigned officers
+            for (HDBOfficer officer : project.getOfficers()) {
+                officer.setAssignedProject(null);
+                officer.setRegistrationApproved(false);
+            }
+            
+            // Remove the project from the manager's list
+            HDBManager manager = project.getManager();
+            if (manager != null) {
+                manager.removeCreatedProject(project);
+            }
+            
+            // Remove from the project list
+            projects.remove(project);
+            saveProjects();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Removes a project from the system using the project object
+     * @param project The project to remove
+     * @return true if successful, false otherwise
+     */
+    public boolean removeProject(BTOProject project) {
+        if (project != null) {
             projects.remove(project);
             saveProjects();
             return true;
