@@ -1,0 +1,235 @@
+@startuml BTO Management System
+
+' Better layout settings for arrow organization
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam nodesep 200
+skinparam ranksep 100
+skinparam ClassAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam packagePadding 40
+skinparam ArrowThickness 1.5
+
+' Package definitions - organized layout
+package "boundary" #LightGray {
+  class ApplicantMenu <<boundary>> {
+    - applicant: Applicant
+    + show(): void
+  }
+
+  class HDBOfficerMenu <<boundary>> {
+    - officer: HDBOfficer
+    + show(): void
+  }
+
+  class HDBManagerMenu <<boundary>> {
+    - manager: HDBManager
+    + show(): void
+  }
+}
+
+package "control" #LightGray {
+  class UserManager <<control>> {
+    - users: List<User>
+    + getInstance(): UserManager
+    + login(): User
+  }
+
+  class ProjectManager <<control>> {
+    - projects: List<BTOProject>
+    + getInstance(): ProjectManager
+    + getVisibleProjects(): List<BTOProject>
+  }
+
+  class ApplicationManager <<control>> {
+    - applications: List<BTOApplication>
+    + getInstance(): ApplicationManager
+    + createApplication(): boolean
+  }
+
+  class EnquiryManager <<control>> {
+    - enquiries: List<Enquiry>
+    + getInstance(): EnquiryManager
+    + createEnquiry(): Enquiry
+  }
+}
+
+package "entity" #LightGray {
+  abstract class User <<entity>> {
+    - nric: String
+    - age: int
+    - maritalStatus: MaritalStatus
+    + getUserType(): UserType
+  }
+
+  class Applicant <<entity>> {
+    - name: String
+    - currentApplication: BTOApplication
+    + getCurrentApplication(): BTOApplication
+  }
+
+  class HDBOfficer <<entity>> {
+    - assignedProject: BTOProject
+    - registrationApproved: boolean
+    + getAssignedProject(): BTOProject
+  }
+
+  class HDBManager <<entity>> {
+    - managedProjects: List<BTOProject>
+    - currentProject: BTOProject
+    + getManagedProjects(): List<BTOProject>
+  }
+
+  class BTOProject <<entity>> {
+    - projectName: String
+    - neighborhood: String
+    - flatUnits: Map<FlatType, Integer>
+    - remainingUnits: Map<FlatType, Integer>
+    - applicationOpenDate: LocalDate
+    - applicationCloseDate: LocalDate
+    - visible: boolean
+    - maxOfficerSlots: int
+    - autoPublish: boolean
+    
+    + getProjectName(): String
+    + getNeighborhood(): String
+    + getFlatUnits(): Map<FlatType, Integer>
+    + getRemainingUnits(): Map<FlatType, Integer>
+    + getApplicationOpenDate(): LocalDate
+    + getApplicationCloseDate(): LocalDate
+    + getManager(): HDBManager
+    + getOfficers(): List<HDBOfficer>
+    + getApplications(): List<BTOApplication>
+    + getEnquiries(): List<Enquiry>
+    + isVisible(): boolean
+    + getMaxOfficerSlots(): int
+    + getRemainingOfficerSlots(): int
+    + isAutoPublish(): boolean
+    + setVisible(boolean): void
+    + setMaxOfficerSlots(int): void
+    + setNeighborhood(String): void
+    + setFlatUnits(Map<FlatType, Integer>): void
+    + setApplicationOpenDate(LocalDate): void
+    + setApplicationCloseDate(LocalDate): void
+    + setAutoPublish(boolean): void
+  }
+
+  class BTOApplication <<entity>> {
+    - applicant: Applicant
+    - project: BTOProject
+    - selectedFlatType: FlatType
+    - status: ApplicationStatus
+    + getApplicant(): Applicant
+  }
+
+  class Enquiry <<entity>> {
+    - id: String
+    - creator: User
+    - project: BTOProject
+    - content: String
+    + getContent(): String
+  }
+}
+
+package "enums" #LightGray {
+  enum UserType <<enumeration>> {
+    APPLICANT
+    HDB_OFFICER
+    HDB_MANAGER
+  }
+
+  enum MaritalStatus <<enumeration>> {
+    SINGLE
+    MARRIED
+  }
+
+  enum FlatType <<enumeration>> {
+    TWO_ROOM
+    THREE_ROOM
+    FOUR_ROOM
+    FIVE_ROOM
+    EXECUTIVE
+  }
+
+  enum ApplicationStatus <<enumeration>> {
+    PENDING
+    SUCCESSFUL
+    UNSUCCESSFUL
+    BOOKED
+  }
+}
+
+package "interfaces" #LightGray {
+  interface IApplicationManageable <<interface>> {
+    + getApplications(): List<BTOApplication>
+    + canUpdateApplicationStatus(): boolean
+  }
+
+  interface IProjectManageable <<interface>> {
+    + createProject(): BTOProject
+    + updateProject(): boolean
+    + getManagedProjects(): List<BTOProject>
+  }
+}
+
+' INHERITANCE RELATIONSHIPS - clear separation
+User <|- Applicant
+Applicant <|- HDBOfficer
+User <|- HDBManager
+
+' INTERFACE IMPLEMENTATIONS - uniform style
+IApplicationManageable <|.. HDBOfficer
+IProjectManageable <|.. HDBManager
+
+' BOUNDARY TO ENTITY RELATIONSHIPS - grouped together
+ApplicantMenu --> Applicant
+HDBOfficerMenu --> HDBOfficer
+HDBManagerMenu --> HDBManager
+
+' BOUNDARY TO CONTROL RELATIONSHIPS - organized by menu type
+ApplicantMenu ..> ProjectManager
+ApplicantMenu ..> ApplicationManager
+ApplicantMenu ..> EnquiryManager
+ApplicantMenu ..> UserManager
+
+HDBOfficerMenu ..> ApplicationManager
+HDBOfficerMenu ..> EnquiryManager
+HDBOfficerMenu ..> ProjectManager
+
+HDBManagerMenu ..> ProjectManager
+HDBManagerMenu ..> UserManager
+HDBManagerMenu ..> EnquiryManager
+
+' ENTITY RELATIONSHIPS - organized by primary entity
+' BTOProject relationships
+BTOProject -right-> HDBManager : managed by
+BTOProject o-down- HDBOfficer : has
+BTOProject o-down- BTOApplication : contains
+BTOProject o-down- Enquiry : contains
+HDBManager o-left- BTOProject : manages
+
+' BTOApplication relationships
+BTOApplication -up-> Applicant : belongs to
+BTOApplication -left-> BTOProject : applies to
+BTOApplication -right-> FlatType : selects
+BTOApplication -down-> ApplicationStatus : has
+
+' Other entity relationships
+Applicant -right-> BTOApplication : has
+HDBOfficer -up-> BTOProject : assigned to
+Enquiry -up-> User : created by
+Enquiry -left-> BTOProject : relates to
+
+' CONTROL TO ENTITY RELATIONSHIPS - consistent style
+UserManager o-- User : manages
+ProjectManager o-- BTOProject : manages
+ApplicationManager o-- BTOApplication : manages
+EnquiryManager o-- Enquiry : manages
+
+' ENUM RELATIONSHIPS - simplified
+User --> MaritalStatus : has
+User --> UserType : returns
+
+@enduml

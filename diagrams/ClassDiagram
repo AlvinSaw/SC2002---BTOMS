@@ -1,0 +1,234 @@
+@startuml BTO Management System
+
+' Enhanced layout settings with adjusted spacing for menu section
+left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam nodesep 220  ' Increased horizontal spacing
+skinparam ranksep 150  ' Reduced vertical spacing
+skinparam dasharray 6,3
+skinparam padding 8
+
+' Boundary classes
+together {
+  class ApplicantMenu <<boundary>> {
+    - scanner: Scanner
+    - applicant: Applicant
+    + ApplicantMenu(applicant: Applicant)
+    + show(): void
+  }
+
+  class HDBOfficerMenu <<boundary>> {
+    - officer: HDBOfficer
+    + HDBOfficerMenu(officer: HDBOfficer)
+    + show(): void
+  }
+
+  class HDBManagerMenu <<boundary>> {
+    - manager: HDBManager
+    + HDBManagerMenu(manager: HDBManager)
+    + show(): void
+  }
+}
+
+' Control classes with increased horizontal spacing
+together {
+  class UserManager <<control>> {
+    - users: List<User>
+    + getInstance(): UserManager
+    + login(): User
+  }
+
+  class ProjectManager <<control>> {
+    - projects: List<BTOProject>
+    + getInstance(): ProjectManager
+    + getVisibleProjects(): List<BTOProject>
+  }
+
+  class ApplicationManager <<control>> {
+    - applications: List<BTOApplication>
+    + getInstance(): ApplicationManager
+    + createApplication(): boolean
+  }
+
+  class EnquiryManager <<control>> {
+    - enquiries: List<Enquiry>
+    + getInstance(): EnquiryManager
+    + createEnquiry(): Enquiry
+  }
+}
+
+' Entity classes
+abstract class User <<entity>> {
+  - nric: String
+  - password: String
+  - age: int
+  - maritalStatus: MaritalStatus
+  + getUserType(): UserType
+}
+
+class Applicant <<entity>> {
+  - name: String
+  - currentApplication: BTOApplication
+  + getCurrentApplication(): BTOApplication
+  + canApplyForFlatType(): boolean
+}
+
+class HDBOfficer <<entity>> {
+  - assignedProject: BTOProject
+  - registrationApproved: boolean
+  + getAssignedProject(): BTOProject
+  + canRegisterForProject(): boolean
+}
+
+class HDBManager <<entity>> {
+  - managedProjects: List<BTOProject>
+  - currentProject: BTOProject
+  + getManagedProjects(): List<BTOProject>
+  + canHandleNewProject(): boolean
+}
+
+class BTOProject <<entity>> {
+  - projectName: String
+  - neighborhood: String
+  - flatUnits: Map<FlatType, Integer>
+  - remainingUnits: Map<FlatType, Integer>
+  - visible: boolean
+  - maxOfficerSlots: int
+  - autoPublish: boolean
+  + getApplications(): List<BTOApplication>
+  + getEnquiries(): List<Enquiry>
+  + isVisible(): boolean
+  + getMaxOfficerSlots(): int
+  + getRemainingOfficerSlots(): int
+  + isAutoPublish(): boolean
+  + setVisible(boolean): void
+  + setMaxOfficerSlots(int): void
+  + setNeighborhood(String): void
+  + setFlatUnits(Map<FlatType, Integer>): void
+  + setApplicationOpenDate(LocalDate): void
+  + setApplicationCloseDate(LocalDate): void
+  + setAutoPublish(boolean): void
+  + addOfficer(HDBOfficer): boolean
+  + addApplication(BTOApplication): void
+  + addEnquiry(Enquiry): void
+}
+
+class BTOApplication <<entity>> {
+  - applicant: Applicant
+  - project: BTOProject
+  - selectedFlatType: FlatType
+  - status: ApplicationStatus
+  + getApplicant(): Applicant
+  + getProject(): BTOProject
+}
+
+class Enquiry <<entity>> {
+  - id: String
+  - creator: User
+  - project: BTOProject
+  - content: String
+  + getContent(): String
+  + addReply(): void
+}
+
+' Enums
+enum UserType <<enumeration>> {
+  APPLICANT
+  HDB_OFFICER
+  HDB_MANAGER
+}
+
+enum MaritalStatus <<enumeration>> {
+  SINGLE
+  MARRIED
+}
+
+enum FlatType <<enumeration>> {
+  TWO_ROOM
+  THREE_ROOM
+  FOUR_ROOM
+  FIVE_ROOM
+  EXECUTIVE
+}
+
+enum ApplicationStatus <<enumeration>> {
+  PENDING
+  SUCCESSFUL
+  UNSUCCESSFUL
+  BOOKED
+}
+
+' Interfaces
+interface IApplicationManageable <<interface>> {
+  + getApplications(): List<BTOApplication>
+  + canUpdateApplicationStatus(): boolean
+  + canGenerateReceipt(): boolean
+}
+
+interface IProjectManageable <<interface>> {
+  + createProject(): BTOProject
+  + updateProject(): boolean
+  + canHandleNewProject(): boolean
+  + getManagedProjects(): List<BTOProject>
+}
+
+' Inheritance relationships
+User <|- Applicant
+Applicant <|- HDBOfficer
+User <|- HDBManager
+
+' Interface implementation
+IApplicationManageable <|.. HDBOfficer
+IProjectManageable <|.. HDBManager
+
+' Association relationships with horizontal spread
+ApplicantMenu -[thickness=1]-> Applicant : uses
+HDBOfficerMenu -[thickness=1]-> HDBOfficer : uses
+HDBManagerMenu -[thickness=1]-> HDBManager : uses
+
+' Horizontally spread menu-to-control relationships with minimal vertical gaps
+ApplicantMenu .[thickness=1].> UserManager : uses
+ApplicantMenu .[thickness=1].> ProjectManager : uses
+ApplicantMenu .[thickness=1].> ApplicationManager : uses
+ApplicantMenu .[thickness=1].> EnquiryManager : uses
+
+HDBOfficerMenu .[thickness=1].> ProjectManager : uses
+HDBOfficerMenu .[thickness=1].> ApplicationManager : uses
+HDBOfficerMenu .[thickness=1].> EnquiryManager : uses
+
+HDBManagerMenu .[thickness=1].> ProjectManager : uses
+HDBManagerMenu .[thickness=1].> UserManager : uses
+HDBManagerMenu .[thickness=1].> EnquiryManager : uses
+
+' Entity relationships
+BTOProject o-- "0..*" HDBOfficer : has
+BTOProject o-- "0..*" BTOApplication : contains
+BTOProject o-- "0..*" Enquiry : contains
+BTOProject --> HDBManager : managed by
+
+BTOApplication --> Applicant : belongs to
+BTOApplication --> BTOProject : applies to
+BTOApplication --> FlatType : selects
+BTOApplication --> ApplicationStatus : has
+
+Applicant --> "0..1" BTOApplication : has
+HDBOfficer --> "0..1" BTOProject : assigned to
+
+Enquiry --> User : created by
+Enquiry --> BTOProject : relates to
+
+HDBManager "1" o-- "0..*" BTOProject : manages
+
+' Control to entity relationships
+UserManager o-- "0..*" User : manages
+ProjectManager o-- "0..*" BTOProject : manages
+ApplicationManager o-- "0..*" BTOApplication : manages
+EnquiryManager o-- "0..*" Enquiry : manages
+
+' User's usage of enums
+User --> MaritalStatus : has
+User --> UserType : returns
+
+@enduml

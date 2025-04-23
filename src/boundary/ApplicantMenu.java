@@ -284,7 +284,7 @@ public class ApplicantMenu {
             return;
         }
 
-        if (!application.isWithdrawalRequested() && application.getStatus() != ApplicationStatus.BOOKED) {
+        if (!application.isWithdrawalRequested()) {
             System.out.print("\nWould you like to request withdrawal? (Y/N): ");
             String choice = scanner.nextLine();
             
