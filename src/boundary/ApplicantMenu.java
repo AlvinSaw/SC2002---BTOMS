@@ -74,11 +74,27 @@ public class ApplicantMenu {
             return;
         }
 
+        // Current application for status check
+        BTOApplication currentApplication = applicant.getCurrentApplication();
+        String currentProjectName = null;
+        
+        // If applicant has UNSUCCESSFUL or WITHDRAWN application, note the current project name to exclude it
+        if (currentApplication != null && 
+            (currentApplication.getStatus() == ApplicationStatus.UNSUCCESSFUL || 
+             currentApplication.getStatus() == ApplicationStatus.WITHDRAWN)) {
+            currentProjectName = currentApplication.getProject().getProjectName();
+        }
+
         // 过滤出符合条件的项目
         List<BTOProject> eligibleProjects = new ArrayList<>();
         for (BTOProject project : projects) {
             // 检查项目是否对用户可见
             if (!project.isVisible()) {
+                continue;
+            }
+            
+            // Skip the project that the applicant has an unsuccessful or withdrawn application for
+            if (currentProjectName != null && project.getProjectName().equals(currentProjectName)) {
                 continue;
             }
 
@@ -104,6 +120,13 @@ public class ApplicantMenu {
 
         if (eligibleProjects.isEmpty()) {
             System.out.println("No available projects found that match your eligibility criteria.");
+            
+            // Special message if they have an unsuccessful/withdrawn application
+            if (currentProjectName != null) {
+                System.out.println("Note: The project you previously applied for (" + currentProjectName + 
+                                   ") has been excluded from the list.");
+            }
+            
             if (applicant.getMaritalStatus() == MaritalStatus.SINGLE && applicant.getAge() < 35) {
                 System.out.println("As a single applicant, you must be 35 years or older to apply.");
             } else if (applicant.getMaritalStatus() == MaritalStatus.MARRIED && applicant.getAge() < 21) {
@@ -193,7 +216,14 @@ public class ApplicantMenu {
             }
         }
 
-        if (applicant.getCurrentApplication() != null) {
+        BTOApplication currentApplication = applicant.getCurrentApplication();
+        
+        // Only consider application as "active" if it's not UNSUCCESSFUL or WITHDRAWN
+        boolean hasActiveApplication = currentApplication != null && 
+            currentApplication.getStatus() != ApplicationStatus.UNSUCCESSFUL && 
+            currentApplication.getStatus() != ApplicationStatus.WITHDRAWN;
+        
+        if (hasActiveApplication) {
             System.out.println("\nYou already have an active application for another project.");
             System.out.println("Would you like to view your current application? (Y/N): ");
             String choice = scanner.nextLine();
@@ -212,10 +242,25 @@ public class ApplicantMenu {
     }
 
     protected void applyForProject(BTOProject project) {
-        // 检查是否已经有申请
-        if (applicant.getCurrentApplication() != null) {
-            System.out.println("You already have an active application. You cannot apply for multiple projects.");
-            return;
+        // Check if the applicant already has an application
+        BTOApplication currentApplication = applicant.getCurrentApplication();
+        
+        // If applicant has a current application, check if it's active
+        if (currentApplication != null) {
+            // If application is unsuccessful or withdrawn, they can apply for a new project
+            if (currentApplication.getStatus() == ApplicationStatus.UNSUCCESSFUL || 
+                currentApplication.getStatus() == ApplicationStatus.WITHDRAWN) {
+                // Check if they're trying to apply for the same project
+                if (currentApplication.getProject().getProjectName().equals(project.getProjectName())) {
+                    System.out.println("You cannot apply for a project that you previously had an unsuccessful or withdrawn application for.");
+                    return;
+                }
+                // Otherwise, continue with the application process
+            } else {
+                // For other statuses (PENDING, SUCCESSFUL, BOOKED), don't allow new application
+                System.out.println("You already have an active application. You cannot apply for multiple projects.");
+                return;
+            }
         }
 
         // 检查年龄和婚姻状态要求
@@ -286,6 +331,21 @@ public class ApplicantMenu {
         
         System.out.println("Status: " + application.getStatus());
         System.out.println("Application Date: " + formattedDate);
+        
+        // Handle specific status messages and actions
+        if (application.getStatus() == ApplicationStatus.UNSUCCESSFUL) {
+            System.out.println("\nYour application was unsuccessful.");
+            System.out.println("You can apply for other BTO projects by selecting 'View Available Projects' from the main menu.");
+            System.out.println("Note: You won't be able to apply for this same project again.");
+            return;
+        }
+        
+        if (application.getStatus() == ApplicationStatus.WITHDRAWN) {
+            System.out.println("\nYour application withdrawal has been approved.");
+            System.out.println("You can now apply for other BTO projects by selecting 'View Available Projects' from the main menu.");
+            System.out.println("Note: You won't be able to apply for this same project again.");
+            return;
+        }
         
         if (application.isWithdrawalRequested()) {
             System.out.println("\nWithdrawal Request Status: PENDING");

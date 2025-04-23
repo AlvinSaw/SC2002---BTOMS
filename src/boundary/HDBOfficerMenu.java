@@ -378,6 +378,18 @@ public class HDBOfficerMenu extends ApplicantMenu {
             }
 
             BTOApplication application = applications.get(appNum - 1);
+            
+            // Check if application can be processed
+            if (application.getStatus() == ApplicationStatus.UNSUCCESSFUL) {
+                System.out.println("This application has been marked as UNSUCCESSFUL and cannot be processed for booking.");
+                return;
+            }
+            
+            if (application.getStatus() == ApplicationStatus.WITHDRAWN) {
+                System.out.println("This application has been WITHDRAWN and cannot be processed for booking.");
+                return;
+            }
+
             if (application.getStatus() != ApplicationStatus.SUCCESSFUL) {
                 System.out.println("Only applications with 'SUCCESSFUL' status can proceed to flat booking.");
                 return;

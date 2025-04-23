@@ -78,6 +78,15 @@ public class BTOProject {
         applications.add(application);
     }
     
+    /**
+     * Removes an application from this project's application list
+     * @param application The application to remove
+     * @return True if the application was successfully removed, false otherwise
+     */
+    public boolean removeApplication(BTOApplication application) {
+        return applications.remove(application);
+    }
+    
     public void addEnquiry(Enquiry enquiry) {
         enquiries.add(enquiry);
     }

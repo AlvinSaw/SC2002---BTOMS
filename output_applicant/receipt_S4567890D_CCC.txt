@@ -1,28 +1,24 @@
-==========================================
-               FLAT BOOKING RECEIPT               
-==========================================
-
-Receipt Date: 2025-04-23 21:10:14
+=== OFFICIAL HDB BTO BOOKING RECEIPT ===
+Date: 2025-04-23 23:47:35
+Officer: David Wong (S6789012F)
 
 APPLICANT DETAILS:
------------------
 Name: Mary Lee
 NRIC: S4567890D
 Age: 28
 Marital Status: MARRIED
 
-FLAT DETAILS:
-------------
-Project Name: CCC
+PROJECT DETAILS:
+Project: CCC
 Neighborhood: 3
-Flat Type: 2-Room
+
+FLAT DETAILS:
+Originally Selected Flat Type: 2-Room
+ASSIGNED FLAT TYPE: 3-Room
 
 BOOKING DETAILS:
-----------------
-Application Date: 2025-04-23 21:09:56
+Application Date: 2025-04-23 23:45:56
 Status: BOOKED
 
-==========================================
-This is an official receipt for your flat booking.
-Please keep this receipt for your records.
-==========================================
+This is an official receipt for flat booking in the BTO Management System.
+=================================================

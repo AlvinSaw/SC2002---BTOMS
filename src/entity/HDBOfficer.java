@@ -83,6 +83,12 @@ public class HDBOfficer extends Applicant implements IApplicationManageable {
                     return newStatus == ApplicationStatus.UNSUCCESSFUL;
                 }
                 return false;
+            case UNSUCCESSFUL:
+                // Unsuccessful applications cannot be updated further
+                return false;
+            case WITHDRAWN:
+                // Withdrawn applications cannot be updated further
+                return false;
             default:
                 return false;
         }
@@ -140,4 +146,4 @@ public class HDBOfficer extends Applicant implements IApplicationManageable {
     public UserType getUserType() {
         return UserType.HDB_OFFICER;
     }
-} 
+}

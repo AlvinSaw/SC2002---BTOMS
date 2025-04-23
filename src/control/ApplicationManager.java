@@ -90,8 +90,21 @@ public class ApplicationManager {
     }
 
     public boolean createApplication(Applicant applicant, BTOProject project, FlatType flatType) {
-        if (applicant.getCurrentApplication() != null) {
-            return false;
+        BTOApplication currentApplication = applicant.getCurrentApplication();
+        
+        // If applicant has a current application...
+        if (currentApplication != null) {
+            // Allow creating a new application if the current one is UNSUCCESSFUL or WITHDRAWN
+            if (currentApplication.getStatus() == ApplicationStatus.UNSUCCESSFUL || 
+                currentApplication.getStatus() == ApplicationStatus.WITHDRAWN) {
+                // Remove the old application before creating a new one
+                applications.remove(currentApplication);
+                currentApplication.getProject().removeApplication(currentApplication);
+                // Continue with creating a new application
+            } else {
+                // For other statuses (PENDING, SUCCESSFUL, BOOKED), don't allow new application
+                return false;
+            }
         }
 
         BTOApplication application = new BTOApplication(applicant, project, flatType);
@@ -143,8 +156,14 @@ public class ApplicationManager {
                 System.out.println("Remaining units after return: " + remainingAfter.get(flatTypeToReturn));
                 System.out.println("Unit successfully returned to the pool.\n");
             }
-            applications.remove(application);
-            application.getApplicant().setCurrentApplication(null);
+            
+            // Mark application as withdrawn instead of removing it
+            application.setStatus(ApplicationStatus.WITHDRAWN);
+            application.resetWithdrawalRequest(); // Clear the withdrawal request flag
+            
+            // The applicant's currentApplication remains set, but is now WITHDRAWN status
+            // This allows them to see it as withdrawn, but they can still apply for a new project
+            
             saveApplications();
             ProjectManager.getInstance().saveProjects(); // Ensure projects are saved with updated unit counts
             return true;

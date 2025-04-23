@@ -49,6 +49,7 @@ public class BTOApplication {
     }
 
     public boolean canBook() {
+        // Only SUCCESSFUL applications that aren't withdrawal-requested can be booked
         return status == ApplicationStatus.SUCCESSFUL && !withdrawalRequested;
     }
 
