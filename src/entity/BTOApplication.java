@@ -36,6 +36,10 @@ public class BTOApplication {
         this.withdrawalRequested = true;
     }
 
+    public void resetWithdrawalRequest() {
+        this.withdrawalRequested = false;
+    }
+
     public boolean canBook() {
         return status == ApplicationStatus.SUCCESSFUL && !withdrawalRequested;
     }

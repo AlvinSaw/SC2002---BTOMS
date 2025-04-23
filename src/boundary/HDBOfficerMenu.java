@@ -334,15 +334,13 @@ public class HDBOfficerMenu extends ApplicantMenu {
                 data[i][4] = applicant.getMaritalStatus().toString();
                 data[i][5] = app.getSelectedFlatType().getDisplayName();
                 data[i][6] = app.getStatus().toString();
-                data[i][7] = app.isWithdrawalRequested() ? "Yes" : "No";
+                data[i][7] = app.isWithdrawalRequested() ? "Pending" : "-";
             }
             
             TablePrinter.printTable(headers, data);
 
-            System.out.println("\n1. Process Application Status");
-            System.out.println("2. Process Withdrawal Request");
-            System.out.println("3. Process Flat Booking");
-            System.out.println("4. Go Back");
+            System.out.println("\n1. Process Flat Booking");
+            System.out.println("2. Go Back");
             System.out.print("Choose an option: ");
             
             try {
@@ -351,150 +349,21 @@ public class HDBOfficerMenu extends ApplicantMenu {
 
                 switch (choice) {
                     case 1:
-                        processApplicationStatus(applications);
-                        break;
-                    case 2:
-                        processWithdrawalRequest(applications);
-                        break;
-                    case 3:
                         processFlatBooking(applications);
                         break;
-                    case 4:
+                    case 2:
                         continueProcessing = false;
                         break;
                     default:
                         System.out.println("Invalid option. Please try again.");
                 }
             } catch (InputMismatchException e) {
-                System.out.println("Invalid input. Please enter a number (1-4).");
+                System.out.println("Invalid input. Please enter a number (1-2).");
                 scanner.nextLine(); // Clear invalid input
             } catch (Exception e) {
                 System.out.println("An error occurred: " + e.getMessage());
                 scanner.nextLine(); // Clear invalid input
             }
-        }
-    }
-
-    private void processApplicationStatus(List<BTOApplication> applications) {
-        System.out.print("Enter application number: ");
-        try {
-            int appNum = scanner.nextInt();
-            scanner.nextLine(); 
-
-            if (appNum < 1 || appNum > applications.size()) {
-                System.out.println("Invalid application number.");
-                return;
-            }
-
-            BTOApplication application = applications.get(appNum - 1);
-            if (application.getStatus() != ApplicationStatus.PENDING) {
-                System.out.println("Can only process pending applications.");
-                return;
-            }
-
-            System.out.printf("Processing application for %s (NRIC: %s, Age: %d, Status: %s)%n", 
-                application.getApplicant().getName(),
-                application.getApplicant().getNric(),
-                application.getApplicant().getAge(),
-                application.getApplicant().getMaritalStatus());
-
-            System.out.println("1. Mark as Successful");
-            System.out.println("2. Mark as Unsuccessful");
-            System.out.print("Choose an option: ");
-            
-            try {
-                int choice = scanner.nextInt();
-                scanner.nextLine(); 
-
-                ApplicationStatus newStatus = null;
-                switch (choice) {
-                    case 1:
-                        newStatus = ApplicationStatus.SUCCESSFUL;
-                        break;
-                    case 2:
-                        newStatus = ApplicationStatus.UNSUCCESSFUL;
-                        break;
-                    default:
-                        System.out.println("Invalid option.");
-                        return;
-                }
-
-                if (applicationManager.updateApplicationStatus(application, newStatus)) {
-                    System.out.println("Application status updated successfully!");
-                } else {
-                    System.out.println("Failed to update application status.");
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid input. Please enter a valid number.");
-                scanner.nextLine(); // Clear invalid input
-            }
-        } catch (InputMismatchException e) {
-            System.out.println("Invalid input. Please enter a valid application number.");
-            scanner.nextLine(); // Clear invalid input
-        } catch (Exception e) {
-            System.out.println("An error occurred: " + e.getMessage());
-            scanner.nextLine(); // Clear invalid input
-        }
-    }
-
-    private void processWithdrawalRequest(List<BTOApplication> applications) {
-        System.out.print("Enter application number: ");
-        try {
-            int appNum = scanner.nextInt();
-            scanner.nextLine(); 
-
-            if (appNum < 1 || appNum > applications.size()) {
-                System.out.println("Invalid application number.");
-                return;
-            }
-
-            BTOApplication application = applications.get(appNum - 1);
-            if (!application.isWithdrawalRequested()) {
-                System.out.println("No withdrawal request for this application.");
-                return;
-            }
-
-            System.out.printf("Processing withdrawal request for %s (NRIC: %s, Age: %d, Status: %s)%n", 
-                application.getApplicant().getName(),
-                application.getApplicant().getNric(),
-                application.getApplicant().getAge(),
-                application.getApplicant().getMaritalStatus());
-
-            System.out.println("1. Approve Withdrawal");
-            System.out.println("2. Reject Withdrawal");
-            System.out.print("Choose an option: ");
-            
-            try {
-                int choice = scanner.nextInt();
-                scanner.nextLine(); 
-
-                if (choice == 1) {
-                    if (applicationManager.approveWithdrawal(application)) {
-                        System.out.println("Withdrawal request approved successfully!");
-                        System.out.println("The applicant can now apply for another project.");
-                    } else {
-                        System.out.println("Failed to approve withdrawal request.");
-                    }
-                } else if (choice == 2) {
-                    if (applicationManager.updateApplicationStatus(application, application.getStatus())) {
-                        application.requestWithdrawal(); // Reset withdrawal request
-                        System.out.println("Withdrawal request rejected.");
-                    } else {
-                        System.out.println("Failed to reject withdrawal request.");
-                    }
-                } else {
-                    System.out.println("Invalid option.");
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid input. Please enter a valid number.");
-                scanner.nextLine(); // Clear invalid input
-            }
-        } catch (InputMismatchException e) {
-            System.out.println("Invalid input. Please enter a valid application number.");
-            scanner.nextLine(); // Clear invalid input
-        } catch (Exception e) {
-            System.out.println("An error occurred: " + e.getMessage());
-            scanner.nextLine(); // Clear invalid input
         }
     }
 
@@ -625,6 +494,21 @@ public class HDBOfficerMenu extends ApplicantMenu {
                 } catch (IOException e) {
                     System.err.println("Error saving receipt: " + e.getMessage());
                 }
+                
+                // Ensure all databases are updated
+                projectManager.saveProjects(); // Save updated flat unit counts
+                applicationManager.saveApplications(); // Save application status changes
+                
+                // Notify the user about updates to the applicant's profile
+                System.out.println("\nAll database records have been updated successfully:");
+                System.out.println("1. Application status changed to BOOKED");
+                System.out.println("2. Flat unit allocated to the applicant");
+                System.out.println("3. Remaining units count updated in the project");
+                System.out.println("4. Applicant profile updated with selected flat type");
+                
+                // Show applicant how to view their updated application
+                System.out.println("\nThe applicant can view their updated application status and flat allocation details");
+                System.out.println("by logging into the system and selecting 'View My Application' option.");
             } else {
                 System.out.println("Failed to book flat. Please try again.");
             }

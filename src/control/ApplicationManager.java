@@ -121,6 +121,16 @@ public class ApplicationManager {
         return false;
     }
 
+    public boolean rejectWithdrawal(BTOApplication application) {
+        if (application.isWithdrawalRequested()) {
+            // Just reset the withdrawal request flag without removing the application
+            application.resetWithdrawalRequest();
+            saveApplications();
+            return true;
+        }
+        return false;
+    }
+
     public boolean bookFlat(BTOApplication application) {
         if (application.canBook() && application.book()) {
             saveApplications();
