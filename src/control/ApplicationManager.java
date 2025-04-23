@@ -218,31 +218,69 @@ public class ApplicationManager {
         if (officer == null) {
             // If the applicant requests to generate a receipt
             StringBuilder receipt = new StringBuilder();
-            receipt.append("=== HDB BTO Application Receipt ===\n");
+            receipt.append("=== HDB BTO APPLICATION RECEIPT ===\n");
             receipt.append("Date: ").append(LocalDateTime.now().format(DATE_FORMAT)).append("\n\n");
             
-            receipt.append("Applicant Details:\n");
+            receipt.append("APPLICANT DETAILS:\n");
             receipt.append("Name: ").append(application.getApplicant().getName()).append("\n");
             receipt.append("NRIC: ").append(application.getApplicant().getNric()).append("\n");
             receipt.append("Age: ").append(application.getApplicant().getAge()).append("\n");
             receipt.append("Marital Status: ").append(application.getApplicant().getMaritalStatus()).append("\n\n");
             
-            receipt.append("Flat Details:\n");
+            receipt.append("PROJECT DETAILS:\n");
             receipt.append("Project: ").append(application.getProject().getProjectName()).append("\n");
-            receipt.append("Neighborhood: ").append(application.getProject().getNeighborhood()).append("\n");
+            receipt.append("Neighborhood: ").append(application.getProject().getNeighborhood()).append("\n\n");
+            
+            receipt.append("FLAT DETAILS:\n");
+            receipt.append("Originally Selected Flat Type: ").append(application.getSelectedFlatType().getDisplayName()).append("\n");
             
             // Use the assigned flat type for booked applications if available
-            FlatType flatTypeToShow = application.getAssignedFlatType() != null ? 
-                application.getAssignedFlatType() : application.getSelectedFlatType();
-            receipt.append("Flat Type: ").append(flatTypeToShow.getDisplayName()).append("\n\n");
+            if (application.getAssignedFlatType() != null) {
+                receipt.append("ASSIGNED FLAT TYPE: ").append(application.getAssignedFlatType().getDisplayName()).append("\n\n");
+            } else {
+                receipt.append("Assigned Flat Type: Same as selected\n\n");
+            }
             
-            receipt.append("Booking Details:\n");
+            receipt.append("BOOKING DETAILS:\n");
             receipt.append("Application Date: ").append(application.getApplicationDate().format(DATE_FORMAT)).append("\n");
             receipt.append("Status: ").append(application.getStatus()).append("\n");
             
             return receipt.toString();
         } else if (officer.canGenerateReceipt(application)) {
-            return officer.generateReceipt(application);
+            // When an officer generates the receipt
+            StringBuilder receipt = new StringBuilder();
+            receipt.append("=== OFFICIAL HDB BTO BOOKING RECEIPT ===\n");
+            receipt.append("Date: ").append(LocalDateTime.now().format(DATE_FORMAT)).append("\n");
+            receipt.append("Officer: ").append(officer.getName()).append(" (").append(officer.getNric()).append(")\n\n");
+            
+            receipt.append("APPLICANT DETAILS:\n");
+            receipt.append("Name: ").append(application.getApplicant().getName()).append("\n");
+            receipt.append("NRIC: ").append(application.getApplicant().getNric()).append("\n");
+            receipt.append("Age: ").append(application.getApplicant().getAge()).append("\n");
+            receipt.append("Marital Status: ").append(application.getApplicant().getMaritalStatus()).append("\n\n");
+            
+            receipt.append("PROJECT DETAILS:\n");
+            receipt.append("Project: ").append(application.getProject().getProjectName()).append("\n");
+            receipt.append("Neighborhood: ").append(application.getProject().getNeighborhood()).append("\n\n");
+            
+            receipt.append("FLAT DETAILS:\n");
+            receipt.append("Originally Selected Flat Type: ").append(application.getSelectedFlatType().getDisplayName()).append("\n");
+            
+            // Prominently display the assigned flat type with formatting
+            if (application.getAssignedFlatType() != null) {
+                receipt.append("ASSIGNED FLAT TYPE: ").append(application.getAssignedFlatType().getDisplayName()).append("\n\n");
+            } else {
+                receipt.append("Assigned Flat Type: Same as selected\n\n");
+            }
+            
+            receipt.append("BOOKING DETAILS:\n");
+            receipt.append("Application Date: ").append(application.getApplicationDate().format(DATE_FORMAT)).append("\n");
+            receipt.append("Status: ").append(application.getStatus()).append("\n\n");
+            
+            receipt.append("This is an official receipt for flat booking in the BTO Management System.\n");
+            receipt.append("=================================================\n");
+            
+            return receipt.toString();
         }
         return "Cannot generate receipt for this application.";
     }

@@ -85,6 +85,32 @@ public class UserManager {
         if (oldPassword.equals(newPassword)) {
             return false;
         }
+        
+        // Check password constraints: minimum 6 characters with at least 1 alphabet and 1 number
+        if (newPassword.length() < 6) {
+            return false;
+        }
+        
+        boolean hasLetter = false;
+        boolean hasDigit = false;
+        
+        for (char c : newPassword.toCharArray()) {
+            if (Character.isLetter(c)) {
+                hasLetter = true;
+            } else if (Character.isDigit(c)) {
+                hasDigit = true;
+            }
+            
+            // If both conditions are met, we can break early
+            if (hasLetter && hasDigit) {
+                break;
+            }
+        }
+        
+        // If either condition is not met, reject the password
+        if (!hasLetter || !hasDigit) {
+            return false;
+        }
 
         currentUser.setPassword(newPassword, true);
         saveUsers();

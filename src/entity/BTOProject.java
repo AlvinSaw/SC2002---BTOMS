@@ -96,15 +96,61 @@ public class BTOProject {
                 this.applicationOpenDate.isAfter(other.applicationCloseDate));
     }
     
-    public boolean updateRemainingUnits(FlatType flatType, int booked) {
-        int current = remainingUnits.get(flatType);
-        if (current >= booked) {
-            remainingUnits.put(flatType, current - booked);
-            // Ensure changes are saved to project files
-            control.ProjectManager.getInstance().saveProjects();
-            return true;
+    /**
+     * Sets the remaining units value for a specific flat type.
+     * This is a helper method used by ProjectManager.
+     * @param flatType The flat type to update
+     * @param value The new remaining units value
+     * @return True if the update was successful, false otherwise
+     */
+    public boolean setRemainingUnitValue(FlatType flatType, int value) {
+        if (remainingUnits.containsKey(flatType) && flatUnits.containsKey(flatType)) {
+            // Ensure value is not negative and doesn't exceed total units
+            if (value >= 0 && value <= flatUnits.get(flatType)) {
+                remainingUnits.put(flatType, value);
+                return true;
+            }
         }
         return false;
+    }
+    
+    /**
+     * Sets the remaining units for all flat types.
+     * This method allows for explicit control over all remaining unit values.
+     * @param remainingUnits A map containing flat types and their remaining unit counts
+     * @return True if the update was successful, false otherwise
+     */
+    public boolean setRemainingUnits(Map<FlatType, Integer> remainingUnits) {
+        // Validate that the provided map contains all flat types from flatUnits
+        if (remainingUnits == null || !this.flatUnits.keySet().equals(remainingUnits.keySet())) {
+            return false;
+        }
+        
+        // Validate that remaining units don't exceed total units for any flat type
+        for (Map.Entry<FlatType, Integer> entry : remainingUnits.entrySet()) {
+            FlatType type = entry.getKey();
+            int remaining = entry.getValue();
+            
+            // Remaining units cannot be negative or exceed total units
+            if (remaining < 0 || remaining > this.flatUnits.get(type)) {
+                return false;
+            }
+        }
+        
+        // All validation passed, update the remainingUnits map
+        this.remainingUnits = new HashMap<>(remainingUnits);
+        
+        // Removed call to ProjectManager.getInstance().saveProjects() to break circular dependency
+        
+        return true;
+    }
+    
+    /**
+     * @deprecated Use ProjectManager.updateRemainingUnits instead
+     */
+    @Deprecated
+    public boolean updateRemainingUnits(FlatType flatType, int booked) {
+        return control.ProjectManager.getInstance().updateRemainingUnits(this, flatType, booked);
     }
     
     public boolean isApplicationOpen() {

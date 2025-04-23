@@ -2,7 +2,7 @@
                FLAT BOOKING RECEIPT               
 ==========================================
 
-Receipt Date: 2025-04-23 18:41:57
+Receipt Date: 2025-04-23 21:10:14
 
 APPLICANT DETAILS:
 -----------------
@@ -15,11 +15,11 @@ FLAT DETAILS:
 ------------
 Project Name: CCC
 Neighborhood: 3
-Flat Type: 3-Room
+Flat Type: 2-Room
 
 BOOKING DETAILS:
 ----------------
-Application Date: 2025-04-23 18:40:37
+Application Date: 2025-04-23 21:09:56
 Status: BOOKED
 
 ==========================================

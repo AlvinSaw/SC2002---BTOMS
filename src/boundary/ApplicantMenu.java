@@ -424,13 +424,45 @@ public class ApplicantMenu {
     protected void changePassword() {
         System.out.print("Enter current password: ");
         String oldPassword = scanner.nextLine();
-        System.out.print("Enter new password: ");
+        System.out.print("Enter new password (minimum 6 characters with at least 1 letter and 1 number): ");
         String newPassword = scanner.nextLine();
+        
+        if (oldPassword.equals(newPassword)) {
+            System.out.println("New password cannot be the same as the current password.");
+            return;
+        }
+        
+        if (newPassword.length() < 6) {
+            System.out.println("Password must be at least 6 characters long.");
+            return;
+        }
+        
+        boolean hasLetter = false;
+        boolean hasDigit = false;
+        
+        for (char c : newPassword.toCharArray()) {
+            if (Character.isLetter(c)) {
+                hasLetter = true;
+            } else if (Character.isDigit(c)) {
+                hasDigit = true;
+            }
+        }
+        
+        if (!hasLetter) {
+            System.out.println("Password must contain at least one letter.");
+            return;
+        }
+        
+        if (!hasDigit) {
+            System.out.println("Password must contain at least one number.");
+            return;
+        }
         
         if (UserManager.getInstance().changePassword(oldPassword, newPassword)) {
             System.out.println("Password changed successfully!");
+            // No longer logging out - just return to the menu
         } else {
-            System.out.println("Failed to change password.");
+            System.out.println("Failed to change password. Please check your current password.");
         }
     }
 

@@ -321,8 +321,8 @@ public class HDBOfficerMenu extends ApplicantMenu {
             }
 
             System.out.println("\nApplications:");
-            String[] headers = {"No.", "Applicant", "NRIC", "Age", "Marital Status", "Flat Type", "Status", "Withdrawal"};
-            String[][] data = new String[applications.size()][8];
+            String[] headers = {"No.", "Applicant", "NRIC", "Selected Type", "Assigned Type", "Status", "Withdrawal"};
+            String[][] data = new String[applications.size()][7];
             
             for (int i = 0; i < applications.size(); i++) {
                 BTOApplication app = applications.get(i);
@@ -330,11 +330,10 @@ public class HDBOfficerMenu extends ApplicantMenu {
                 data[i][0] = String.valueOf(i + 1);
                 data[i][1] = applicant.getName();
                 data[i][2] = applicant.getNric();
-                data[i][3] = String.valueOf(applicant.getAge());
-                data[i][4] = applicant.getMaritalStatus().toString();
-                data[i][5] = app.getSelectedFlatType().getDisplayName();
-                data[i][6] = app.getStatus().toString();
-                data[i][7] = app.isWithdrawalRequested() ? "Pending" : "-";
+                data[i][3] = app.getSelectedFlatType().getDisplayName();
+                data[i][4] = app.getAssignedFlatType() != null ? app.getAssignedFlatType().getDisplayName() : "-";
+                data[i][5] = app.getStatus().toString();
+                data[i][6] = app.isWithdrawalRequested() ? "Pending" : "-";
             }
             
             TablePrinter.printTable(headers, data);
@@ -535,39 +534,78 @@ public class HDBOfficerMenu extends ApplicantMenu {
             return;
         }
 
-        System.out.println("\nApplications:");
+        System.out.println("\nBooked Applications:");
+        int count = 0;
+        String[] headers = {"No.", "Applicant", "NRIC", "Selected Type", "Assigned Type", "Status"};
+        List<String[]> rows = new ArrayList<>();
+        
         for (int i = 0; i < applications.size(); i++) {
             BTOApplication app = applications.get(i);
             if (app.getStatus() == ApplicationStatus.BOOKED) {
                 Applicant applicant = app.getApplicant();
-                System.out.printf("%d. Applicant: %s (NRIC: %s, Age: %d, Status: %s), Type: %s, Status: %s%n",
-                    i + 1,
-                    applicant.getName(),
-                    applicant.getNric(),
-                    applicant.getAge(),
-                    applicant.getMaritalStatus(),
-                    app.getSelectedFlatType().getDisplayName(),
-                    app.getStatus());
+                count++;
+                String[] row = new String[6];
+                row[0] = String.valueOf(count);
+                row[1] = applicant.getName();
+                row[2] = applicant.getNric();
+                row[3] = app.getSelectedFlatType().getDisplayName();
+                row[4] = app.getAssignedFlatType() != null ? app.getAssignedFlatType().getDisplayName() : "-";
+                row[5] = app.getStatus().toString();
+                rows.add(row);
             }
         }
+        
+        if (count == 0) {
+            System.out.println("No booked applications for this project.");
+            return;
+        }
+        
+        String[][] data = rows.toArray(new String[0][0]);
+        TablePrinter.printTable(headers, data);
 
         System.out.print("\nEnter application number to generate receipt (0 to go back): ");
         try {
             int choice = scanner.nextInt();
             scanner.nextLine();
 
-            if (choice > 0 && choice <= applications.size()) {
-                BTOApplication selectedApp = applications.get(choice - 1);
-                if (selectedApp.getStatus() == ApplicationStatus.BOOKED) {
+            if (choice > 0 && choice <= count) {
+                BTOApplication selectedApp = null;
+                int currentCount = 0;
+                
+                for (BTOApplication app : applications) {
+                    if (app.getStatus() == ApplicationStatus.BOOKED) {
+                        currentCount++;
+                        if (currentCount == choice) {
+                            selectedApp = app;
+                            break;
+                        }
+                    }
+                }
+                
+                if (selectedApp != null) {
                     String receipt = applicationManager.generateReceipt(selectedApp, officer);
                     if (receipt != null) {
                         System.out.println("\n=== Receipt ===");
                         System.out.println(receipt);
+                        
+                        // Offer to save receipt to file
+                        System.out.print("\nSave receipt to file? (Y/N): ");
+                        String saveChoice = scanner.nextLine();
+                        if (saveChoice.equalsIgnoreCase("Y")) {
+                            String filename = String.format("output_applicant/receipt_%s_%s.txt", 
+                                selectedApp.getApplicant().getNric(), 
+                                selectedApp.getProject().getProjectName().replaceAll("\\s+", "_"));
+                            
+                            try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
+                                writer.print(receipt);
+                                System.out.println("Receipt saved to " + filename);
+                            } catch (IOException e) {
+                                System.err.println("Error saving receipt: " + e.getMessage());
+                            }
+                        }
                     } else {
                         System.out.println("Failed to generate receipt.");
                     }
-                } else {
-                    System.out.println("Can only generate receipts for booked applications.");
                 }
             }
         } catch (InputMismatchException e) {
