@@ -1,0 +1,109 @@
+@startuml HDBOfficer_BTOApplication_SequenceDiagram
+actor HDBOfficer
+boundary "HDBOfficerMenu" as Officer
+boundary "ApplicantMenu" as ApplicantMenu
+control "ProjectManager" as PM
+entity "BTOProject" as Project
+control "ApplicationManager" as AM
+entity "BTOApplication" as Application
+entity "Applicant" as ApplicantEntity
+control "UserManager" as UM
+entity "FlatType" as FlatType
+
+title HDB Officer BTO Application Flow
+
+HDBOfficer -> Officer: Login
+activate Officer
+Officer -> UM: login(nric, password)
+activate UM
+UM --> Officer: login success
+deactivate UM
+
+HDBOfficer -> Officer: Switch to Applicant Mode
+Officer -> ApplicantMenu: show()
+activate ApplicantMenu
+
+== View Available BTO Projects ==
+
+HDBOfficer -> ApplicantMenu: View available projects
+ApplicantMenu -> PM: getVisibleProjectsForUser(HDBOfficer)
+activate PM
+PM -> Project: isVisible() && isOpenForApplication()
+activate Project
+Project --> PM: Visibility and application status
+deactivate Project
+PM --> ApplicantMenu: List of available projects
+deactivate PM
+ApplicantMenu --> HDBOfficer: Display available BTO projects
+
+== BTO Selection and Application ==
+
+HDBOfficer -> ApplicantMenu: Select a project
+ApplicantMenu -> PM: getProject(projectName)
+activate PM
+PM --> ApplicantMenu: Selected project details
+deactivate PM
+
+HDBOfficer -> ApplicantMenu: View flat types available
+ApplicantMenu -> Project: getFlatUnits() & getRemainingUnits()
+activate Project
+Project --> ApplicantMenu: Available flat types and units
+deactivate Project
+ApplicantMenu --> HDBOfficer: Display flat options
+
+HDBOfficer -> ApplicantMenu: Check flat eligibility
+ApplicantMenu -> ApplicantEntity: canApplyForFlatType(flatType)
+activate ApplicantEntity
+ApplicantEntity -> FlatType: Check eligibility rules
+activate FlatType
+FlatType --> ApplicantEntity: Eligibility result
+deactivate FlatType
+ApplicantEntity --> ApplicantMenu: Eligibility status
+deactivate ApplicantEntity
+ApplicantMenu --> HDBOfficer: Display eligible flat types
+
+HDBOfficer -> ApplicantMenu: Select flat type and submit application
+ApplicantMenu -> AM: createApplication(applicant, project, flatType)
+activate AM
+AM -> Application: new BTOApplication(applicant, project, flatType)
+activate Application
+Application --> AM: New application created
+deactivate Application
+
+AM -> Project: checkAndDecrementUnitAvailability(flatType)
+activate Project
+Project --> AM: Unit availability confirmed
+deactivate Project
+
+AM -> Project: addApplication(application)
+activate Project
+Project --> AM: Application added to project
+deactivate Project
+
+AM --> ApplicantMenu: Application submission status
+deactivate AM
+ApplicantMenu --> HDBOfficer: Application submitted successfully
+
+== View Application Status ==
+
+HDBOfficer -> ApplicantMenu: View my applications
+ApplicantMenu -> AM: getApplicationsForApplicant(applicant)
+activate AM
+AM --> ApplicantMenu: List of applications
+deactivate AM
+ApplicantMenu --> HDBOfficer: Display application details
+
+HDBOfficer -> ApplicantMenu: Return to main menu
+deactivate ApplicantMenu
+
+== Logout ==
+
+HDBOfficer -> Officer: Logout
+Officer -> UM: logout()
+activate UM
+UM --> Officer: Logout successful
+deactivate UM
+Officer --> HDBOfficer: Logged out
+deactivate Officer
+
+@enduml

@@ -1,0 +1,80 @@
+@startuml HDBOfficer_ProjectRegistration_SequenceDiagram
+actor HDBOfficer
+boundary "HDBOfficerMenu" as Officer
+control "ProjectManager" as PM
+entity "BTOProject" as Project
+control "UserManager" as UM
+
+title HDB Officer Project Registration Flow
+
+HDBOfficer -> Officer: Login
+activate Officer
+Officer -> UM: login(nric, password)
+activate UM
+UM --> Officer: login success
+deactivate UM
+
+== View Available Projects for Registration ==
+
+HDBOfficer -> Officer: View available projects to register
+activate Officer
+Officer -> PM: getAllProjects()
+activate PM
+
+PM -> Project: Get all projects with available officer slots
+activate Project
+Project --> PM: List of eligible projects
+deactivate Project
+
+PM --> Officer: List of projects
+deactivate PM
+Officer --> HDBOfficer: Display available projects
+
+== Project Registration ==
+
+HDBOfficer -> Officer: Select project to register for
+Officer -> PM: getProject(projectName)
+activate PM
+PM --> Officer: Project details
+deactivate PM
+
+HDBOfficer -> Officer: Submit registration request
+Officer -> Project: addOfficer(officer)
+activate Project
+Project -> Project: Check officer limit & existing assignments
+Project --> Officer: Registration pending approval
+deactivate Project
+Officer --> HDBOfficer: Registration submitted for approval
+
+== View Assigned Project ==
+
+HDBOfficer -> Officer: View my project assignment
+Officer -> Project: getAssignedProject()
+activate Project
+Project --> Officer: Project assignment details
+deactivate Project
+
+Officer -> PM: isRegistrationApproved(officer, project)
+activate PM
+PM --> Officer: Registration approval status
+deactivate PM
+Officer --> HDBOfficer: Display project assignment
+
+alt Registration Approved
+  HDBOfficer -> Officer: Access project management features
+  Officer --> HDBOfficer: Show project management options
+else Registration Pending
+  Officer --> HDBOfficer: Display pending status
+end
+
+== Logout ==
+
+HDBOfficer -> Officer: Logout
+Officer -> UM: logout()
+activate UM
+UM --> Officer: Logout successful
+deactivate UM
+Officer --> HDBOfficer: Logged out
+deactivate Officer
+
+@enduml

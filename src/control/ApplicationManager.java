@@ -129,6 +129,47 @@ public class ApplicationManager {
         return false;
     }
 
+    public boolean bookFlatWithType(BTOApplication application, FlatType selectedFlatType) {
+        if (application.getStatus() != ApplicationStatus.SUCCESSFUL) {
+            return false;
+        }
+        
+        BTOProject project = application.getProject();
+        
+        // Verify flat type is eligible for applicant
+        Applicant applicant = application.getApplicant();
+        if (!applicant.canApplyForFlatType(selectedFlatType)) {
+            return false;
+        }
+        
+        // Check if there are enough units of this flat type
+        Map<FlatType, Integer> remainingUnits = project.getRemainingUnits();
+        if (!remainingUnits.containsKey(selectedFlatType) || remainingUnits.get(selectedFlatType) <= 0) {
+            return false;
+        }
+        
+        // Update the flat type if changed from original application
+        FlatType originalFlatType = application.getSelectedFlatType();
+        if (!originalFlatType.equals(selectedFlatType)) {
+            application.setSelectedFlatType(selectedFlatType);
+        }
+        
+        // Update remaining units count for the selected flat type
+        project.updateRemainingUnits(selectedFlatType, 1);
+        
+        // Update application status to BOOKED
+        application.setStatus(ApplicationStatus.BOOKED);
+        
+        // Update applicant profile with the selected flat type
+        applicant.updateSelectedFlatType(selectedFlatType);
+        
+        // Save changes
+        saveApplications();
+        ProjectManager.getInstance().saveProjects();
+        
+        return true;
+    }
+
     public String generateReceipt(BTOApplication application, HDBOfficer officer) {
         if (application.getStatus() != ApplicationStatus.BOOKED) {
             return "Can only generate receipts for booked applications.";

@@ -7,6 +7,9 @@ import util.TablePrinter;
 import java.util.*;
 import java.time.LocalDateTime;
 import java.util.InputMismatchException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 public class HDBOfficerMenu extends ApplicantMenu {
     private HDBOfficer officer;
@@ -507,29 +510,126 @@ public class HDBOfficerMenu extends ApplicantMenu {
             }
 
             BTOApplication application = applications.get(appNum - 1);
-            if (!application.canBook()) {
-                System.out.println("This application is not eligible for flat booking.");
+            if (application.getStatus() != ApplicationStatus.SUCCESSFUL) {
+                System.out.println("Only applications with 'SUCCESSFUL' status can proceed to flat booking.");
                 return;
             }
 
-            System.out.printf("Processing flat booking for %s (NRIC: %s, Age: %d, Status: %s)%n", 
-                application.getApplicant().getName(),
-                application.getApplicant().getNric(),
-                application.getApplicant().getAge(),
-                application.getApplicant().getMaritalStatus());
+            if (application.isWithdrawalRequested()) {
+                System.out.println("This application has a pending withdrawal request. Cannot proceed with booking.");
+                return;
+            }
 
-            if (applicationManager.bookFlat(application)) {
-                System.out.println("Flat booked successfully!");
+            Applicant applicant = application.getApplicant();
+            BTOProject project = application.getProject();
+            
+            System.out.printf("Processing flat booking for %s (NRIC: %s)%n", 
+                applicant.getName(), applicant.getNric());
+            
+            // Display available flat types with remaining units
+            System.out.println("\nAvailable Flat Types:");
+            String[] headers = {"No.", "Flat Type", "Remaining Units", "Eligible"};
+            
+            Map<FlatType, Integer> remainingUnits = project.getRemainingUnits();
+            List<FlatType> availableFlatTypes = new ArrayList<>();
+            
+            // Filter flat types with remaining units > 0 that the applicant is eligible for
+            for (Map.Entry<FlatType, Integer> entry : remainingUnits.entrySet()) {
+                FlatType flatType = entry.getKey();
+                int units = entry.getValue();
+                
+                if (units > 0 && applicant.canApplyForFlatType(flatType)) {
+                    availableFlatTypes.add(flatType);
+                }
+            }
+            
+            if (availableFlatTypes.isEmpty()) {
+                System.out.println("No eligible flat types with remaining units available.");
+                return;
+            }
+            
+            String[][] data = new String[availableFlatTypes.size()][4];
+            for (int i = 0; i < availableFlatTypes.size(); i++) {
+                FlatType flatType = availableFlatTypes.get(i);
+                data[i][0] = String.valueOf(i + 1);
+                data[i][1] = flatType.getDisplayName();
+                data[i][2] = String.valueOf(remainingUnits.get(flatType));
+                data[i][3] = "Yes";
+            }
+            
+            TablePrinter.printTable(headers, data);
+            
+            // Let the officer select a flat type for the applicant
+            System.out.print("\nSelect flat type number (0 to cancel): ");
+            int flatTypeChoice = scanner.nextInt();
+            scanner.nextLine();
+            
+            if (flatTypeChoice == 0) {
+                System.out.println("Flat booking canceled.");
+                return;
+            }
+            
+            if (flatTypeChoice < 1 || flatTypeChoice > availableFlatTypes.size()) {
+                System.out.println("Invalid flat type selection.");
+                return;
+            }
+            
+            FlatType selectedFlatType = availableFlatTypes.get(flatTypeChoice - 1);
+            
+            // Confirm the flat selection
+            System.out.printf("You are about to book a %s for %s (NRIC: %s).%n", 
+                selectedFlatType.getDisplayName(), applicant.getName(), applicant.getNric());
+            System.out.print("Confirm booking? (Y/N): ");
+            
+            String confirmation = scanner.nextLine();
+            if (!confirmation.equalsIgnoreCase("Y")) {
+                System.out.println("Booking canceled.");
+                return;
+            }
+            
+            // Process the booking with the selected flat type
+            if (applicationManager.bookFlatWithType(application, selectedFlatType)) {
+                System.out.println("\nFlat booked successfully!");
+                System.out.printf("A %s from %s has been allocated to %s.%n", 
+                    selectedFlatType.getDisplayName(), 
+                    project.getProjectName(), 
+                    applicant.getName());
+                
+                // Display updated remaining units information
+                System.out.println("\nRemaining Units after Booking:");
+                String[] updatedHeaders = {"Flat Type", "Remaining Units"};
+                String[][] updatedData = new String[project.getRemainingUnits().size()][2];
+                
+                int i = 0;
+                for (Map.Entry<FlatType, Integer> entry : project.getRemainingUnits().entrySet()) {
+                    updatedData[i][0] = entry.getKey().getDisplayName();
+                    updatedData[i][1] = String.valueOf(entry.getValue());
+                    i++;
+                }
+                
+                TablePrinter.printTable(updatedHeaders, updatedData);
                 
                 // Generate and display receipt
                 String receipt = applicationManager.generateReceipt(application, officer);
                 System.out.println("\nBooking Receipt:");
                 System.out.println(receipt);
+                
+                // Save to file
+                String filename = String.format("output_applicant/receipt_%s_%s.txt", 
+                    applicant.getNric(), 
+                    project.getProjectName().replaceAll("\\s+", "_"));
+                
+                try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
+                    writer.print(receipt);
+                    System.out.println("\nReceipt saved to " + filename);
+                } catch (IOException e) {
+                    System.err.println("Error saving receipt: " + e.getMessage());
+                }
             } else {
-                System.out.println("Failed to book flat.");
+                System.out.println("Failed to book flat. Please try again.");
             }
         } catch (InputMismatchException e) {
-            System.out.println("Invalid input. Please enter a valid application number.");
+            System.out.println("Invalid input. Please enter a valid number.");
             scanner.nextLine(); // Clear invalid input
         } catch (Exception e) {
             System.out.println("An error occurred: " + e.getMessage());

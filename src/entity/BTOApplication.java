@@ -49,4 +49,12 @@ public class BTOApplication {
         }
         return false;
     }
-} 
+
+    public void setSelectedFlatType(FlatType flatType) {
+        this.selectedFlatType = flatType;
+    }
+
+    public String getProjectName() {
+        return project.getProjectName();
+    }
+}

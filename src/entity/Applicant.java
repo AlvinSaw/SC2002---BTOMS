@@ -103,4 +103,18 @@ public class Applicant extends User implements IProjectViewable, IEnquiryManagea
     public void setName(String name) {
         this.name = name;
     }
-} 
+
+    /**
+     * Update the applicant's profile with the selected flat type
+     * This method is called when an HDB Officer books a flat for the applicant
+     * 
+     * @param flatType The flat type selected for the applicant
+     */
+    public void updateSelectedFlatType(FlatType flatType) {
+        // This method can be expanded to store the flat type in the applicant's profile
+        // Currently just ensures the currentApplication has the correct flat type
+        if (currentApplication != null) {
+            currentApplication.setSelectedFlatType(flatType);
+        }
+    }
+}

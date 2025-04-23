@@ -1,0 +1,167 @@
+@startuml
+actor HDBOfficer
+boundary "HDBOfficerMenu" as Officer
+control "ProjectManager" as PM
+entity "BTOProject" as Project
+control "EnquiryManager" as EM
+entity "Enquiry" as Enquiry
+control "ApplicationManager" as AM
+entity "BTOApplication" as Application
+control "UserManager" as UM
+
+alt Main Menu Choice
+    HDBOfficer -> Officer: Select menu option
+    
+    alt Switch to Applicant Mode
+        HDBOfficer -> Officer: Select Applicant Mode
+        activate Officer
+        
+        alt View Available Projects
+            HDBOfficer -> Officer: View available projects
+            Officer -> PM: getVisibleProjectsForUser(HDBOfficer)
+            activate PM
+            PM -> Project: Get visible project details
+            activate Project
+            Project --> PM: Project details
+            deactivate Project
+            PM --> Officer: Visible project details
+            deactivate PM
+            Officer --> HDBOfficer: Display projects
+        else Apply for BTO flat
+            HDBOfficer -> Officer: Apply for BTO flat
+            Officer -> PM: getVisibleProjectsForUser(HDBOfficer)
+            activate PM
+            PM --> Officer: Project details
+            deactivate PM
+            
+            HDBOfficer -> Officer: Select project and flat type
+            Officer -> AM: createApplication()
+            activate AM
+            AM -> Application: Create application
+            activate Application
+            Application --> AM: Application created
+            deactivate Application
+            AM -> Project: Check unit availability
+            activate Project
+            Project --> AM: Availability confirmed
+            deactivate Project
+            AM --> Officer: Application confirmation
+            deactivate AM
+            Officer --> HDBOfficer: Application submitted successfully
+        else Create Enquiry
+            HDBOfficer -> Officer: Create enquiry
+            Officer -> EM: createEnquiry()
+            activate EM
+            EM -> Enquiry: Create enquiry entity
+            activate Enquiry
+            Enquiry --> EM: Enquiry created
+            deactivate Enquiry
+            EM --> Officer: Enquiry created
+            deactivate EM
+            Officer --> HDBOfficer: Enquiry submitted
+        else View My Application
+            HDBOfficer -> Officer: View my application
+            Officer -> AM: getApplicationsForApplicant()
+            activate AM
+            AM --> Officer: Application details
+            deactivate AM
+            Officer --> HDBOfficer: Display application
+        else View My Enquiries
+            HDBOfficer -> Officer: View my enquiries
+            Officer -> EM: getEnquiriesFromUser()
+            activate EM
+            EM --> Officer: User enquiries
+            deactivate EM
+            Officer --> HDBOfficer: Display enquiries
+        else Generate Receipt
+            HDBOfficer -> Officer: Generate receipt
+            Officer -> AM: generateReceiptForApplicant()
+            activate AM
+            AM --> Officer: Receipt
+            deactivate AM
+            Officer --> HDBOfficer: Display receipt
+        else Change Password
+            HDBOfficer -> Officer: Change password
+            Officer -> UM: changePassword()
+            activate UM
+            UM --> Officer: Password change result
+            deactivate UM
+            Officer --> HDBOfficer: Password change confirmation
+        end
+        
+        deactivate Officer
+        
+    else Switch to Officer Mode
+        HDBOfficer -> Officer: Select Officer Mode
+        activate Officer
+        
+        alt View Available Projects to Register
+            HDBOfficer -> Officer: View available projects to register
+            Officer -> PM: getAllProjects()
+            activate PM
+            PM --> Officer: List of projects
+            deactivate PM
+            Officer --> HDBOfficer: Display available projects
+        else Register for Project
+            HDBOfficer -> Officer: Register for a project
+            Officer -> Project: addOfficer(officer)
+            activate Project
+            Project --> Officer: Registration result
+            deactivate Project
+            Officer --> HDBOfficer: Registration confirmation
+        else View My Project
+            HDBOfficer -> Officer: View my project
+            Officer -> Project: Get project details
+            activate Project
+            Project --> Officer: Project details
+            deactivate Project
+            Officer --> HDBOfficer: Display project information
+        else View Project Enquiries
+            HDBOfficer -> Officer: View project enquiries
+            Officer -> EM: getEnquiriesForProject()
+            activate EM
+            EM --> Officer: List of enquiries
+            deactivate EM
+            Officer --> HDBOfficer: Display enquiries
+            
+            alt Reply to Enquiry
+                HDBOfficer -> Officer: Reply to enquiry
+                Officer -> EM: addReply()
+                activate EM
+                EM -> Enquiry: Add reply to enquiry
+                activate Enquiry
+                Enquiry --> EM: Reply added
+                deactivate Enquiry
+                EM --> Officer: Reply confirmation
+                deactivate EM
+                Officer --> HDBOfficer: Reply successful
+            end
+        else Generate Receipt
+            HDBOfficer -> Officer: Generate receipt
+            Officer -> AM: generateReceipt()
+            activate AM
+            AM --> Officer: Receipt
+            deactivate AM
+            Officer --> HDBOfficer: Display receipt
+        else Change Password
+            HDBOfficer -> Officer: Change password
+            Officer -> UM: changePassword()
+            activate UM
+            UM --> Officer: Password change result
+            deactivate UM
+            Officer --> HDBOfficer: Password change confirmation
+        end
+        
+        deactivate Officer
+        
+    else Logout
+        HDBOfficer -> Officer: Logout
+        Officer -> UM: logout()
+        activate UM
+        UM --> Officer: Logout confirmation
+        deactivate UM
+        Officer --> HDBOfficer: Logout successful
+    end
+end
+
+@enduml

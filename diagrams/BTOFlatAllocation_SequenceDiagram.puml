@@ -1,0 +1,76 @@
+@startuml BTOFlatAllocation_SequenceDiagram
+actor HDBManager
+boundary "HDBManagerMenu" as ManagerMenu
+control "ProjectManager" as PM
+entity "BTOProject" as Project
+control "ApplicationManager" as AM
+entity "BTOApplication" as Application
+entity "Applicant" as ApplicantEntity
+control "UserManager" as UM
+
+title BTO Flat Allocation Process
+
+HDBManager -> ManagerMenu: Login
+activate ManagerMenu
+ManagerMenu -> UM: login(nric, password)
+activate UM
+UM --> ManagerMenu: Login success (manager)
+deactivate UM
+
+== View Projects ==
+
+HDBManager -> ManagerMenu: View projects
+ManagerMenu -> PM: getManagedProjects()
+activate PM
+PM --> ManagerMenu: List of manager's projects
+deactivate PM
+ManagerMenu --> HDBManager: Display projects
+
+== Select Project for Report ==
+
+HDBManager -> ManagerMenu: Select project 
+ManagerMenu -> PM: getProject(projectName)
+activate PM
+PM --> ManagerMenu: Selected project
+deactivate PM
+
+== Generate Report ==
+
+HDBManager -> ManagerMenu: Generate reports
+ManagerMenu -> ManagerMenu: Display report options
+
+HDBManager -> ManagerMenu: Select report type
+ManagerMenu -> AM: getApplicationsForProject(projectName)
+activate AM
+AM --> ManagerMenu: List of applications
+deactivate AM
+
+alt All Applications Report
+    ManagerMenu -> ManagerMenu: generateAllApplicationsReport(applications, projectName)
+else Successful Applications Report
+    ManagerMenu -> ManagerMenu: generateSuccessfulApplicationsReport(applications, projectName)
+else Booked Flats Report
+    ManagerMenu -> ManagerMenu: generateBookedFlatsReport(applications, projectName)
+else Applications by Flat Type Report
+    ManagerMenu -> ManagerMenu: generateApplicationsByFlatTypeReport(applications, projectName)
+else Applications by Marital Status Report
+    ManagerMenu -> ManagerMenu: generateApplicationsByMaritalStatusReport(applications, projectName)
+end
+
+ManagerMenu --> HDBManager: Display report
+
+HDBManager -> ManagerMenu: Save report to file
+ManagerMenu -> ManagerMenu: saveReportToFile(filename)
+ManagerMenu --> HDBManager: Report saved confirmation
+
+== Logout ==
+
+HDBManager -> ManagerMenu: Logout
+ManagerMenu -> UM: logout()
+activate UM
+UM --> ManagerMenu: Logout successful
+deactivate UM
+ManagerMenu --> HDBManager: Logged out
+deactivate ManagerMenu
+
+@enduml

@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.InputMismatchException;
+import java.io.*;
 
 public class HDBManagerMenu {
     private Scanner scanner = new Scanner(System.in);
@@ -540,27 +541,119 @@ public class HDBManagerMenu {
                 return;
             }
 
+            // Display applications table
             System.out.println("\nApplications:");
-            String[] headers = {"NRIC", "Name", "Flat Type", "Status", "Withdrawal"};
-            String[][] data = new String[applications.size()][5];
+            String[] headers = {"No.", "NRIC", "Name", "Flat Type", "Status", "Withdrawal"};
+            String[][] data = new String[applications.size()][6];
             
             for (int i = 0; i < applications.size(); i++) {
                 BTOApplication app = applications.get(i);
-                data[i][0] = app.getApplicant().getNric();
-                data[i][1] = app.getApplicant().getName();
-                data[i][2] = app.getSelectedFlatType().getDisplayName();
-                data[i][3] = app.getStatus().toString();
-                data[i][4] = app.isWithdrawalRequested() ? "Requested" : "-";
+                data[i][0] = String.valueOf(i + 1); 
+                data[i][1] = app.getApplicant().getNric();
+                data[i][2] = app.getApplicant().getName();
+                data[i][3] = app.getSelectedFlatType().getDisplayName();
+                data[i][4] = app.getStatus().toString();
+                data[i][5] = app.isWithdrawalRequested() ? "Requested" : "-";
             }
             
             TablePrinter.printTable(headers, data);
             
-            System.out.println("\nPress Enter to go back...");
+            // Display flat type distribution statistics
+            Map<FlatType, Integer> flatTypeCounts = new HashMap<>();
+            for (BTOApplication app : applications) {
+                flatTypeCounts.merge(app.getSelectedFlatType(), 1, Integer::sum);
+            }
+            
+            System.out.println("\nFlat Type Distribution:");
+            String[] statHeaders = {"Flat Type", "Applications", "Percentage"};
+            String[][] statData = new String[flatTypeCounts.size()][3];
+            
+            int row = 0;
+            for (Map.Entry<FlatType, Integer> entry : flatTypeCounts.entrySet()) {
+                double percentage = (entry.getValue() * 100.0) / applications.size();
+                statData[row][0] = entry.getKey().getDisplayName();
+                statData[row][1] = String.valueOf(entry.getValue());
+                statData[row][2] = String.format("%.1f%%", percentage);
+                row++;
+            }
+            
+            TablePrinter.printTable(statHeaders, statData);
+            
+            // View detailed application info
+            System.out.println("\nOptions:");
+            System.out.println("1. View Detailed Application Information");
+            System.out.println("2. Go Back");
+            System.out.print("Choose an option: ");
+            
+            int choice = scanner.nextInt();
             scanner.nextLine();
+            
+            if (choice == 1) {
+                System.out.print("Enter application number: ");
+                int appNum = scanner.nextInt();
+                scanner.nextLine();
+                
+                if (appNum < 1 || appNum > applications.size()) {
+                    System.out.println("Invalid application number.");
+                } else {
+                    BTOApplication selected_app = applications.get(appNum - 1);
+                    displayDetailedApplicationInfo(selected_app, selected);
+                }
+            }
         } catch (InputMismatchException e) {
             System.out.println("Invalid input. Please enter a valid project number.");
             scanner.nextLine();
         }
+    }
+    
+    private void displayDetailedApplicationInfo(BTOApplication app, BTOProject project) {
+        System.out.println("\n==================================================");
+        System.out.println("               APPLICATION DETAILS                ");
+        System.out.println("==================================================");
+        
+        Applicant applicant = app.getApplicant();
+        
+        // Application information
+        System.out.println("\nProject Information:");
+        System.out.println("------------------");
+        System.out.println("Project Name: " + project.getProjectName());
+        System.out.println("Neighborhood: " + project.getNeighborhood());
+        
+        // Flat Type Information
+        System.out.println("\nFlat Type Information:");
+        System.out.println("--------------------");
+        System.out.println("Selected Flat Type: " + app.getSelectedFlatType().getDisplayName());
+        
+        // Show remaining units of this type
+        int remainingUnits = project.getRemainingUnits().getOrDefault(app.getSelectedFlatType(), 0);
+        System.out.println("Units Remaining: " + remainingUnits);
+        
+        // Application Status
+        System.out.println("\nApplication Status:");
+        System.out.println("-----------------");
+        System.out.println("Status: " + app.getStatus());
+        System.out.println("Date Applied: " + app.getApplicationDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        System.out.println("Withdrawal Request: " + (app.isWithdrawalRequested() ? "Yes" : "No"));
+        
+        // Applicant Information
+        System.out.println("\nApplicant Information:");
+        System.out.println("--------------------");
+        System.out.println("Name: " + applicant.getName());
+        System.out.println("NRIC: " + applicant.getNric());
+        System.out.println("Age: " + applicant.getAge());
+        System.out.println("Marital Status: " + applicant.getMaritalStatus());
+        
+        // Eligibility Information
+        System.out.println("\nEligibility Information:");
+        System.out.println("----------------------");
+        System.out.println("Eligible Flat Types:");
+        for (FlatType type : FlatType.values()) {
+            boolean eligible = applicant.canApplyForFlatType(type);
+            System.out.printf("- %s: %s%n", type.getDisplayName(), eligible ? "Eligible" : "Not Eligible");
+        }
+        
+        System.out.println("\nPress Enter to continue...");
+        scanner.nextLine();
     }
 
     private void viewProjectEnquiries() {
@@ -612,21 +705,20 @@ public class HDBManagerMenu {
             
             TablePrinter.printTable(headers, data);
             
-            // Display detailed view of enquiries with replies
+            // Display detailed view of enquiries with replies in a more organized format (not using tables)
             boolean hasReplies = false;
             System.out.println("\nDetailed Enquiries with Replies:");
             for (int i = 0; i < enquiries.size(); i++) {
                 Enquiry enquiry = enquiries.get(i);
                 if (enquiry.hasReply()) {
                     hasReplies = true;
-                    System.out.println("\nEnquiry #" + (i + 1) + ":");
-                    String[] detailHeaders = {"Property", "Value"};
-                    String[][] detailData = {
-                        {"From", enquiry.getCreator().getNric() + " (" + enquiry.getCreator().getName() + ")"},
-                        {"Enquiry", enquiry.getContent()},
-                        {"Reply", enquiry.getReply()}
-                    };
-                    TablePrinter.printTable(detailHeaders, detailData);
+                    String separator = "-------------------------------------------";
+                    System.out.println("\n" + separator);
+                    System.out.println("Enquiry #" + (i + 1));
+                    System.out.println("From: " + enquiry.getCreator().getNric() + " (" + enquiry.getCreator().getName() + ")");
+                    System.out.println("Question: " + enquiry.getContent());
+                    System.out.println("Reply: " + enquiry.getReply());
+                    System.out.println(separator);
                 }
             }
             
@@ -821,23 +913,35 @@ public class HDBManagerMenu {
                 System.out.println("\nReport:");
                 switch (choice) {
                     case 1:
-                        generateAllApplicationsReport(applications);
+                        generateAllApplicationsReport(applications, selected.getProjectName());
                         break;
                     case 2:
-                        generateSuccessfulApplicationsReport(applications);
+                        generateSuccessfulApplicationsReport(applications, selected.getProjectName());
                         break;
                     case 3:
-                        generateBookedFlatsReport(applications);
+                        generateBookedFlatsReport(applications, selected.getProjectName());
                         break;
                     case 4:
-                        generateApplicationsByFlatTypeReport(applications);
+                        generateApplicationsByFlatTypeReport(applications, selected.getProjectName());
                         break;
                     case 5:
-                        generateApplicationsByMaritalStatusReport(applications);
+                        generateApplicationsByMaritalStatusReport(applications, selected.getProjectName());
                         break;
                     default:
                         System.out.println("Invalid option.");
                 }
+                
+                // Ask if user wants to save the report to a file
+                System.out.print("\nSave report to a file? (Y/N): ");
+                String saveChoice = scanner.nextLine();
+                if (saveChoice.equalsIgnoreCase("Y")) {
+                    String reportType = getReportTypeName(choice);
+                    String filename = "output_reports/" + selected.getProjectName().replaceAll("\\s+", "_") 
+                                     + "_" + reportType + ".txt";
+                    saveReportToFile(filename);
+                    System.out.println("Report saved to " + filename);
+                }
+                
             } catch (InputMismatchException e) {
                 System.out.println("Invalid input. Please enter a valid option.");
                 scanner.nextLine();
@@ -847,31 +951,162 @@ public class HDBManagerMenu {
             scanner.nextLine();
         }
     }
+    
+    private String getReportTypeName(int choice) {
+        switch (choice) {
+            case 1: return "All_Applications";
+            case 2: return "Successful_Applications";
+            case 3: return "Booked_Flats";
+            case 4: return "By_FlatType";
+            case 5: return "By_MaritalStatus";
+            default: return "Report";
+        }
+    }
+    
+    private void saveReportToFile(String filename) {
+        try {
+            // Create a new PrintStream that will capture System.out
+            PrintStream originalOut = System.out;
+            ByteArrayOutputStream reportContent = new ByteArrayOutputStream();
+            PrintStream reportOut = new PrintStream(reportContent);
+            
+            // Temporarily redirect System.out to our buffer
+            System.setOut(reportOut);
+            
+            // Re-run the last report to capture its output
+            executeLastReport();
+            
+            // Restore the original System.out
+            System.setOut(originalOut);
+            reportOut.close();
+            
+            // Write the captured content to a file
+            try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
+                writer.print(reportContent.toString());
+            }
+            
+        } catch (IOException e) {
+            System.err.println("Error saving report to file: " + e.getMessage());
+        }
+    }
+    
+    // Store the last report parameters to re-run it when saving to file
+    private BTOProject lastReportProject;
+    private List<BTOApplication> lastReportApplications;
+    private int lastReportType;
+    
+    private void executeLastReport() {
+        if (lastReportApplications == null || lastReportProject == null) {
+            System.out.println("No report data available");
+            return;
+        }
+        
+        switch (lastReportType) {
+            case 1:
+                generateAllApplicationsReport(lastReportApplications, lastReportProject.getProjectName());
+                break;
+            case 2:
+                generateSuccessfulApplicationsReport(lastReportApplications, lastReportProject.getProjectName());
+                break;
+            case 3:
+                generateBookedFlatsReport(lastReportApplications, lastReportProject.getProjectName());
+                break;
+            case 4:
+                generateApplicationsByFlatTypeReport(lastReportApplications, lastReportProject.getProjectName());
+                break;
+            case 5:
+                generateApplicationsByMaritalStatusReport(lastReportApplications, lastReportProject.getProjectName());
+                break;
+        }
+    }
 
-    private void generateAllApplicationsReport(List<BTOApplication> applications) {
+    private void generateAllApplicationsReport(List<BTOApplication> applications, String projectName) {
+        lastReportProject = projectManager.getProject(projectName);
+        lastReportApplications = applications;
+        lastReportType = 1;
+
+        System.out.println("ALL APPLICATIONS REPORT - " + projectName);
+        System.out.println("===============================================");
         System.out.printf("Total Applications: %d%n%n", applications.size());
+        
+        // Sort applications by status for better organization
+        List<BTOApplication> sortedApps = new ArrayList<>(applications);
+        sortedApps.sort((a1, a2) -> a1.getStatus().compareTo(a2.getStatus()));
         
         // Define date formatter for consistent display
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         
-        String[] headers = {"NRIC", "Name", "Age", "Marital Status", "Flat Type", "Status", "Date"};
-        String[][] data = new String[applications.size()][7];
-        
-        for (int i = 0; i < applications.size(); i++) {
-            BTOApplication app = applications.get(i);
-            data[i][0] = app.getApplicant().getNric();
-            data[i][1] = app.getApplicant().getName();
-            data[i][2] = String.valueOf(app.getApplicant().getAge());
-            data[i][3] = app.getApplicant().getMaritalStatus().toString();
-            data[i][4] = app.getSelectedFlatType().getDisplayName();
-            data[i][5] = app.getStatus().toString();
-            data[i][6] = app.getApplicationDate().format(dateFormatter);
+        // Display summary statistics by application status
+        Map<ApplicationStatus, Integer> statusCounts = new HashMap<>();
+        for (BTOApplication app : applications) {
+            statusCounts.merge(app.getStatus(), 1, Integer::sum);
         }
         
-        TablePrinter.printTable(headers, data);
+        System.out.println("APPLICATION STATUS BREAKDOWN:");
+        String[] statusHeaders = {"Status", "Count", "Percentage"};
+        String[][] statusData = new String[statusCounts.size()][3];
+        
+        int i = 0;
+        for (Map.Entry<ApplicationStatus, Integer> entry : statusCounts.entrySet()) {
+            double percentage = (entry.getValue() * 100.0) / applications.size();
+            statusData[i][0] = entry.getKey().toString();
+            statusData[i][1] = String.valueOf(entry.getValue());
+            statusData[i][2] = String.format("%.1f%%", percentage);
+            i++;
+        }
+        
+        TablePrinter.printTable(statusHeaders, statusData);
+        
+        System.out.println("\nDETAILED APPLICANT INFORMATION:");
+        System.out.println("================================");
+        
+        // Display each application in a vertical format with detailed applicant information
+        for (i = 0; i < sortedApps.size(); i++) {
+            BTOApplication app = sortedApps.get(i);
+            Applicant applicant = app.getApplicant();
+            
+            String separator = "-----------------------------------------";
+            System.out.println(separator);
+            System.out.println("Application #" + (i+1) + " (" + app.getStatus() + ")");
+            
+            // Applicant Details
+            System.out.println("\nAPPLICANT DETAILS:");
+            System.out.println("NRIC: " + applicant.getNric());
+            System.out.println("Name: " + applicant.getName());
+            System.out.println("Age: " + applicant.getAge());
+            System.out.println("Marital Status: " + applicant.getMaritalStatus());
+            
+            // Application Details
+            System.out.println("\nAPPLICATION DETAILS:");
+            System.out.println("Flat Type: " + app.getSelectedFlatType().getDisplayName());
+            System.out.println("Application Date: " + app.getApplicationDate().format(dateFormatter));
+            if (app.isWithdrawalRequested()) {
+                System.out.println("Withdrawal: Requested");
+            }
+            
+            // Eligibility Information
+            System.out.println("\nELIGIBILITY INFORMATION:");
+            System.out.println("Eligible Flat Types:");
+            for (FlatType type : FlatType.values()) {
+                if (applicant.canApplyForFlatType(type)) {
+                    System.out.println("- " + type.getDisplayName());
+                }
+            }
+            
+            System.out.println(separator);
+            System.out.println(); // Add extra line for spacing between applications
+        }
+        
+        if (applications.isEmpty()) {
+            System.out.println("No applications found for this project.");
+        }
     }
 
-    private void generateSuccessfulApplicationsReport(List<BTOApplication> applications) {
+    private void generateSuccessfulApplicationsReport(List<BTOApplication> applications, String projectName) {
+        lastReportProject = projectManager.getProject(projectName);
+        lastReportApplications = applications;
+        lastReportType = 2;
+
         List<BTOApplication> successful = new ArrayList<>();
         for (BTOApplication app : applications) {
             if (app.getStatus() == ApplicationStatus.SUCCESSFUL) {
@@ -885,7 +1120,11 @@ public class HDBManagerMenu {
         }
     }
 
-    private void generateBookedFlatsReport(List<BTOApplication> applications) {
+    private void generateBookedFlatsReport(List<BTOApplication> applications, String projectName) {
+        lastReportProject = projectManager.getProject(projectName);
+        lastReportApplications = applications;
+        lastReportType = 3;
+
         List<BTOApplication> booked = new ArrayList<>();
         for (BTOApplication app : applications) {
             if (app.getStatus() == ApplicationStatus.BOOKED) {
@@ -899,61 +1138,176 @@ public class HDBManagerMenu {
         }
     }
 
-    private void generateApplicationsByFlatTypeReport(List<BTOApplication> applications) {
-        Map<FlatType, Integer> counts = new HashMap<>();
+    private void generateApplicationsByFlatTypeReport(List<BTOApplication> applications, String projectName) {
+        lastReportProject = projectManager.getProject(projectName);
+        lastReportApplications = applications;
+        lastReportType = 4;
+
+        Map<FlatType, List<BTOApplication>> appsByFlatType = new HashMap<>();
+        
+        // Group applications by flat type
         for (BTOApplication app : applications) {
-            counts.merge(app.getSelectedFlatType(), 1, Integer::sum);
+            FlatType flatType = app.getSelectedFlatType();
+            if (!appsByFlatType.containsKey(flatType)) {
+                appsByFlatType.put(flatType, new ArrayList<>());
+            }
+            appsByFlatType.get(flatType).add(app);
         }
         
-        System.out.println("Applications by Flat Type:");
-        String[] headers = {"Flat Type", "Number of Applications"};
-        String[][] data = new String[counts.size()][2];
+        // Display summary
+        System.out.println("APPLICATIONS BY FLAT TYPE REPORT - " + projectName);
+        String[] headers = {"Flat Type", "Number of Applications", "Percentage"};
+        String[][] data = new String[appsByFlatType.size()][3];
         
         int i = 0;
-        for (Map.Entry<FlatType, Integer> entry : counts.entrySet()) {
+        for (Map.Entry<FlatType, List<BTOApplication>> entry : appsByFlatType.entrySet()) {
+            double percentage = (entry.getValue().size() * 100.0) / applications.size();
             data[i][0] = entry.getKey().getDisplayName();
-            data[i][1] = entry.getValue().toString();
+            data[i][1] = String.valueOf(entry.getValue().size());
+            data[i][2] = String.format("%.1f%%", percentage);
             i++;
         }
         
         TablePrinter.printTable(headers, data);
+        
+        // Display detailed applicant information for each flat type
+        System.out.println("\nDETAILED APPLICANT INFORMATION BY FLAT TYPE");
+        System.out.println("==============================================");
+        
+        for (Map.Entry<FlatType, List<BTOApplication>> entry : appsByFlatType.entrySet()) {
+            FlatType flatType = entry.getKey();
+            List<BTOApplication> flatTypeApps = entry.getValue();
+            
+            System.out.println("\n" + flatType.getDisplayName() + " APPLICATIONS (" + flatTypeApps.size() + ")");
+            System.out.println(String.join("", Collections.nCopies(flatType.getDisplayName().length() + 14 + String.valueOf(flatTypeApps.size()).length() + 2, "-")));
+            
+            for (int j = 0; j < flatTypeApps.size(); j++) {
+                BTOApplication app = flatTypeApps.get(j);
+                Applicant applicant = app.getApplicant();
+                
+                System.out.println("\nApplicant #" + (j+1));
+                System.out.println("Name: " + applicant.getName());
+                System.out.println("NRIC: " + applicant.getNric());
+                System.out.println("Age: " + applicant.getAge());
+                System.out.println("Marital Status: " + applicant.getMaritalStatus());
+                System.out.println("Application Status: " + app.getStatus());
+                System.out.println("Application Date: " + app.getApplicationDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                if (app.isWithdrawalRequested()) {
+                    System.out.println("Withdrawal Requested: Yes");
+                }
+                System.out.println();
+            }
+        }
     }
 
-    private void generateApplicationsByMaritalStatusReport(List<BTOApplication> applications) {
-        Map<MaritalStatus, Integer> counts = new HashMap<>();
+    private void generateApplicationsByMaritalStatusReport(List<BTOApplication> applications, String projectName) {
+        lastReportProject = projectManager.getProject(projectName);
+        lastReportApplications = applications;
+        lastReportType = 5;
+
+        Map<MaritalStatus, List<BTOApplication>> appsByMaritalStatus = new HashMap<>();
+        
+        // Group applications by marital status
         for (BTOApplication app : applications) {
-            counts.merge(app.getApplicant().getMaritalStatus(), 1, Integer::sum);
+            MaritalStatus status = app.getApplicant().getMaritalStatus();
+            if (!appsByMaritalStatus.containsKey(status)) {
+                appsByMaritalStatus.put(status, new ArrayList<>());
+            }
+            appsByMaritalStatus.get(status).add(app);
         }
         
-        String[] headers = {"Marital Status", "Number of Applications"};
-        String[][] data = new String[counts.size()][2];
+        // Display summary
+        System.out.println("APPLICATIONS BY MARITAL STATUS REPORT - " + projectName);
+        String[] headers = {"Marital Status", "Number of Applications", "Percentage"};
+        String[][] data = new String[appsByMaritalStatus.size()][3];
         
         int i = 0;
-        for (Map.Entry<MaritalStatus, Integer> entry : counts.entrySet()) {
+        for (Map.Entry<MaritalStatus, List<BTOApplication>> entry : appsByMaritalStatus.entrySet()) {
+            double percentage = (entry.getValue().size() * 100.0) / applications.size();
             data[i][0] = entry.getKey().toString();
-            data[i][1] = entry.getValue().toString();
+            data[i][1] = String.valueOf(entry.getValue().size());
+            data[i][2] = String.format("%.1f%%", percentage);
             i++;
         }
         
         TablePrinter.printTable(headers, data);
+        
+        // Display detailed applicant information for each marital status
+        System.out.println("\nDETAILED APPLICANT INFORMATION BY MARITAL STATUS");
+        System.out.println("=================================================");
+        
+        for (Map.Entry<MaritalStatus, List<BTOApplication>> entry : appsByMaritalStatus.entrySet()) {
+            MaritalStatus status = entry.getKey();
+            List<BTOApplication> statusApps = entry.getValue();
+            
+            System.out.println("\n" + status.toString() + " APPLICANTS (" + statusApps.size() + ")");
+            System.out.println(String.join("", Collections.nCopies(status.toString().length() + 13 + String.valueOf(statusApps.size()).length() + 2, "-")));
+            
+            for (int j = 0; j < statusApps.size(); j++) {
+                BTOApplication app = statusApps.get(j);
+                Applicant applicant = app.getApplicant();
+                
+                System.out.println("\nApplicant #" + (j+1));
+                System.out.println("Name: " + applicant.getName());
+                System.out.println("NRIC: " + applicant.getNric());
+                System.out.println("Age: " + applicant.getAge());
+                System.out.println("Flat Type: " + app.getSelectedFlatType().getDisplayName());
+                System.out.println("Application Status: " + app.getStatus());
+                System.out.println("Application Date: " + app.getApplicationDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                if (app.isWithdrawalRequested()) {
+                    System.out.println("Withdrawal Requested: Yes");
+                }
+                
+                // Eligibility Information 
+                System.out.println("Eligible Flat Types:");
+                for (FlatType type : FlatType.values()) {
+                    if (applicant.canApplyForFlatType(type)) {
+                        System.out.println("  - " + type.getDisplayName());
+                    }
+                }
+                System.out.println();
+            }
+        }
     }
 
     private void printApplicationDetails(BTOApplication app) {
         // Define date formatter for consistent display
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        Applicant applicant = app.getApplicant();
         
-        String[] headers = {"Property", "Value"};
-        String[][] data = {
-            {"Name", app.getApplicant().getName()},
-            {"NRIC", app.getApplicant().getNric()},
-            {"Age", String.valueOf(app.getApplicant().getAge())},
-            {"Marital Status", app.getApplicant().getMaritalStatus().toString()},
-            {"Flat Type", app.getSelectedFlatType().getDisplayName()},
-            {"Status", app.getStatus().toString()},
-            {"Application Date", app.getApplicationDate().format(dateFormatter)}
-        };
+        // Print application overview with header
+        String separator = "=================================================";
+        System.out.println(separator);
+        System.out.println("APPLICATION DETAILS - " + app.getProjectName());
+        System.out.println(separator);
         
-        TablePrinter.printTable(headers, data);
+        // Basic application information
+        System.out.println("Application Status: " + app.getStatus());
+        System.out.println("Application Date: " + app.getApplicationDate().format(dateFormatter));
+        System.out.println("Flat Type: " + app.getSelectedFlatType().getDisplayName());
+        if (app.isWithdrawalRequested()) {
+            System.out.println("Withdrawal: Requested");
+        }
+        
+        // Detailed applicant information
+        System.out.println("\nAPPLICANT INFORMATION:");
+        System.out.println("-----------------------");
+        System.out.println("Name: " + applicant.getName());
+        System.out.println("NRIC: " + applicant.getNric());
+        System.out.println("Age: " + applicant.getAge());
+        System.out.println("Marital Status: " + applicant.getMaritalStatus());
+        
+        // Add housing eligibility information if available
+        System.out.println("\nELIGIBILITY INFORMATION:");
+        System.out.println("-----------------------");
+        System.out.println("Eligible Flat Types: ");
+        for (FlatType type : FlatType.values()) {
+            if (applicant.canApplyForFlatType(type)) {
+                System.out.println("- " + type.getDisplayName());
+            }
+        }
+        
+        System.out.println(separator);
         System.out.println(); // Add extra line for spacing between applications
     }
 
