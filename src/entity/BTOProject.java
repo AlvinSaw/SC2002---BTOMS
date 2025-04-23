@@ -100,6 +100,8 @@ public class BTOProject {
         int current = remainingUnits.get(flatType);
         if (current >= booked) {
             remainingUnits.put(flatType, current - booked);
+            // Ensure changes are saved to project files
+            control.ProjectManager.getInstance().saveProjects();
             return true;
         }
         return false;
