@@ -36,33 +36,38 @@ public class ApplicantMenu {
             System.out.println("7. Logout");
             System.out.print("Choose an option: ");
             
-            int choice = scanner.nextInt();
-            scanner.nextLine();
-            
-            switch (choice) {
-                case 1:
-                    viewAvailableProjects();
-                    break;
-                case 2:
-                    viewMyApplication();
-                    break;
-                case 3:
-                    viewMyEnquiries();
-                    break;
-                case 4:
-                    createNewEnquiry();
-                    break;
-                case 5:
-                    generateReceipt();
-                    break;
-                case 6:
-                    changePassword();
-                    break;
-                case 7:
-                    UserManager.getInstance().logout();
-                    return;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
+                
+                switch (choice) {
+                    case 1:
+                        viewAvailableProjects();
+                        break;
+                    case 2:
+                        viewMyApplication();
+                        break;
+                    case 3:
+                        viewMyEnquiries();
+                        break;
+                    case 4:
+                        createNewEnquiry();
+                        break;
+                    case 5:
+                        generateReceipt();
+                        break;
+                    case 6:
+                        changePassword();
+                        break;
+                    case 7:
+                        UserManager.getInstance().logout();
+                        return;
+                    default:
+                        System.out.println("Invalid option. Please try again.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number (1-7).");
+                scanner.nextLine(); // Clear invalid input
             }
         }
     }
@@ -143,8 +148,14 @@ public class ApplicantMenu {
         System.out.println("4. View All Projects");
         System.out.print("Enter your choice: ");
         
-        int sortChoice = scanner.nextInt();
-        scanner.nextLine();
+        int sortChoice = 4; // Default to view all projects
+        try {
+            sortChoice = scanner.nextInt();
+            scanner.nextLine();
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Showing all projects by default.");
+            scanner.nextLine(); // Clear the invalid input
+        }
 
         List<BTOProject> displayProjects = new ArrayList<>(eligibleProjects);
 
@@ -193,8 +204,15 @@ public class ApplicantMenu {
         }
 
         System.out.print("Enter project number to view details (0 to go back): ");
-        int choice = scanner.nextInt();
-        scanner.nextLine(); 
+        int choice = 0; // Default to go back
+        try {
+            choice = scanner.nextInt();
+            scanner.nextLine();
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Returning to the previous menu.");
+            scanner.nextLine(); // Clear the invalid input
+            return;
+        }
 
         if (choice > 0 && choice <= displayProjects.size()) {
             BTOProject selected = displayProjects.get(choice - 1);
@@ -291,8 +309,15 @@ public class ApplicantMenu {
         }
 
         System.out.print("Enter your choice (0 to cancel): ");
-        int choice = scanner.nextInt();
-        scanner.nextLine();
+        int choice = 0; // Default to cancel
+        try {
+            choice = scanner.nextInt();
+            scanner.nextLine();
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Application cancelled.");
+            scanner.nextLine(); // Clear the invalid input
+            return;
+        }
 
         if (choice > 0 && choice <= availableTypes.size()) {
             FlatType selectedType = availableTypes.get(choice - 1);
@@ -387,8 +412,15 @@ public class ApplicantMenu {
         }
 
         System.out.print("\nEnter enquiry number to edit/delete (0 to go back): ");
-        int choice = scanner.nextInt();
-        scanner.nextLine(); 
+        int choice = 0; // Default to go back
+        try {
+            choice = scanner.nextInt();
+            scanner.nextLine();
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Returning to the previous menu.");
+            scanner.nextLine(); // Clear the invalid input
+            return;
+        }
 
         if (choice > 0 && choice <= enquiries.size()) {
             manageEnquiry(enquiries.get(choice - 1));
@@ -406,8 +438,15 @@ public class ApplicantMenu {
         System.out.println("3. Go back");
         System.out.print("Choose an option: ");
         
-        int choice = scanner.nextInt();
-        scanner.nextLine(); 
+        int choice = 3; // Default to go back
+        try {
+            choice = scanner.nextInt();
+            scanner.nextLine();
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Returning to the previous menu.");
+            scanner.nextLine(); // Clear the invalid input
+            return;
+        }
 
         switch (choice) {
             case 1:
@@ -450,8 +489,15 @@ public class ApplicantMenu {
         System.out.println("0. Go Back");
 
         System.out.print("Enter project number: ");
-        int projectNum = scanner.nextInt();
-        scanner.nextLine();
+        int projectNum = 0; // Default to go back
+        try {
+            projectNum = scanner.nextInt();
+            scanner.nextLine();
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Returning to the previous menu.");
+            scanner.nextLine(); // Clear the invalid input
+            return;
+        }
 
         if (projectNum == 0) {
             return;

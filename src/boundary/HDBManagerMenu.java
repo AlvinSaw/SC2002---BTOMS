@@ -289,12 +289,17 @@ public class HDBManagerMenu {
             TablePrinter.printTable(headers, data);
 
             System.out.print("Enter project number to view details (0 to go back): ");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine();
 
-            if (choice > 0 && choice <= projects.size()) {
-                BTOProject selected = projects.get(choice - 1);
-                viewProjectDetails(selected, true);
+                if (choice > 0 && choice <= projects.size()) {
+                    BTOProject selected = projects.get(choice - 1);
+                    viewProjectDetails(selected, true);
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                scanner.nextLine(); // Clear invalid input
             }
         } catch (InputMismatchException e) {
             System.out.println("Invalid input. Please enter a valid number.");
