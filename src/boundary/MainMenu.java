@@ -2,16 +2,19 @@ package boundary;
 
 import control.*;
 import entity.*;
+import interfaces.*;
 import java.util.Scanner;
 import java.io.*;
 import java.util.Arrays;
 
 public class MainMenu {
     private static Scanner scanner = new Scanner(System.in);
-    private UserManager userManager;
+    private IUserManager userManager;
+    private IProjectManager projectManager;
 
     public MainMenu() {
         userManager = UserManager.getInstance();
+        projectManager = ProjectManager.getInstance();
     }
 
     public void start() {
@@ -67,6 +70,10 @@ public class MainMenu {
         
         if (userManager.login(nric, password)) {
             User currentUser = userManager.getCurrentUser();
+            
+            // Auto-publish eligible projects when a user logs in
+            projectManager.autoPublishProjects();
+            
             System.out.println("\n=== Welcome to BTO Management System ===");
             System.out.println("Welcome, " + currentUser.getName() + "!");
             System.out.println("Role: " + currentUser.getUserType());

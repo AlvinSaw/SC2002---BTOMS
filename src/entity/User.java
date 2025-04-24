@@ -53,15 +53,6 @@ public abstract class User {
         return PasswordHasher.verifyPassword(inputPassword, this.password);
     }
 
-    public boolean validateNRIC() {
-        if (nric == null || nric.length() != 9) return false;
-        char first = nric.charAt(0);
-        char last = nric.charAt(8);
-        return (first == 'S' || first == 'T') && 
-               Character.isLetter(last) &&
-               nric.substring(1, 8).matches("\\d{7}");
-    }
-
     public String getName() {
         return name;
     }

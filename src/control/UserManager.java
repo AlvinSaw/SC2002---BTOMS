@@ -2,10 +2,12 @@ package control;
 
 import entity.*;
 import enums.*;
+import interfaces.*;
+import util.SystemLogger;
 import java.util.*;
 import java.io.*;
 
-public class UserManager {
+public class UserManager implements IUserManager {
     private static UserManager instance;
     private Map<String, User> users;
     private User currentUser;
@@ -52,37 +54,84 @@ public class UserManager {
         }
     }
 
+    @Override
     public boolean login(String nric, String password) {
         User user = users.get(nric);
         if (user != null && user.validatePassword(password)) {
             currentUser = user;
+            // Log the successful login
+            SystemLogger.logLogin(user.getNric(), user.getName(), user.getUserType().toString());
             return true;
         }
         return false;
     }
 
+    @Override
     public void logout() {
+        if (currentUser != null) {
+            // Log the logout event before setting currentUser to null
+            SystemLogger.logLogout(currentUser.getNric(), currentUser.getName(), currentUser.getUserType().toString());
+        }
         currentUser = null;
     }
 
+    @Override
     public boolean changePassword(String oldPassword, String newPassword) {
-        if (currentUser != null && currentUser.validatePassword(oldPassword)) {
-            String hashedNewPassword = PasswordHasher.hashPassword(newPassword);
-            currentUser.setPassword(hashedNewPassword);
-            saveUsers();
-            return true;
+        if (currentUser == null) {
+            return false;
         }
-        return false;
+
+        if (!currentUser.validatePassword(oldPassword)) {
+            return false;
+        }
+
+        // Check if new password is the same as the old password
+        if (oldPassword.equals(newPassword)) {
+            return false;
+        }
+        
+        // Check password constraints: minimum 6 characters with at least 1 alphabet and 1 number
+        if (newPassword.length() < 6) {
+            return false;
+        }
+        
+        boolean hasLetter = false;
+        boolean hasDigit = false;
+        
+        for (char c : newPassword.toCharArray()) {
+            if (Character.isLetter(c)) {
+                hasLetter = true;
+            } else if (Character.isDigit(c)) {
+                hasDigit = true;
+            }
+            
+            // If both conditions are met, we can break early
+            if (hasLetter && hasDigit) {
+                break;
+            }
+        }
+        
+        // If either condition is not met, reject the password
+        if (!hasLetter || !hasDigit) {
+            return false;
+        }
+
+        currentUser.setPassword(newPassword, true);
+        saveUsers();
+        return true;
     }
 
+    @Override
     public User getCurrentUser() {
         return currentUser;
     }
 
+    @Override
     public User getUser(String nric) {
         return users.get(nric);
     }
 
+    @Override
     public void saveUsers() {
         try (PrintWriter writer = new PrintWriter(new FileWriter("database/users.txt"))) {
             for (User user : users.values()) {
@@ -100,27 +149,4 @@ public class UserManager {
             System.err.println("Error saving users: " + e.getMessage());
         }
     }
-
-    public boolean register(String nric, String password, int age, MaritalStatus maritalStatus, UserType userType, String name) {
-        if (users.containsKey(nric)) {
-            return false;
-        }
-
-        User user = null;
-        if (userType == UserType.APPLICANT) {
-            user = new Applicant(nric, "", age, maritalStatus, name);
-        } else if (userType == UserType.HDB_OFFICER) {
-            user = new HDBOfficer(nric, "", age, maritalStatus, name);
-        } else if (userType == UserType.HDB_MANAGER) {
-            user = new HDBManager(nric, "", age, maritalStatus, name);
-        }
-
-        if (user != null) {
-            user.setPassword(password, true);
-            users.put(nric, user);
-            saveUsers();
-            return true;
-        }
-        return false;
-    }
-} 
+}

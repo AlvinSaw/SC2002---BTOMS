@@ -1,12 +1,13 @@
 package control;
 
 import entity.*;
+import interfaces.*;
 import java.util.*;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class EnquiryManager {
+public class EnquiryManager implements IEnquiryManager {
     private static EnquiryManager instance;
     private List<Enquiry> enquiries;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -47,6 +48,7 @@ public class EnquiryManager {
         }
     }
 
+    @Override
     public void saveEnquiries() {
         try (PrintWriter writer = new PrintWriter(new FileWriter("database/enquiries.txt"))) {
             for (Enquiry enquiry : enquiries) {
@@ -62,6 +64,7 @@ public class EnquiryManager {
         }
     }
 
+    @Override
     public List<Enquiry> getEnquiriesForProject(String projectName) {
         List<Enquiry> projectEnquiries = new ArrayList<>();
         for (Enquiry enquiry : enquiries) {
@@ -72,6 +75,7 @@ public class EnquiryManager {
         return projectEnquiries;
     }
 
+    @Override
     public List<Enquiry> getEnquiriesForUser(String nric) {
         List<Enquiry> userEnquiries = new ArrayList<>();
         for (Enquiry enquiry : enquiries) {
@@ -82,6 +86,7 @@ public class EnquiryManager {
         return userEnquiries;
     }
 
+    @Override
     public Enquiry getEnquiry(String id) {
         for (Enquiry enquiry : enquiries) {
             if (enquiry.getId().equals(id)) {
@@ -91,6 +96,7 @@ public class EnquiryManager {
         return null;
     }
 
+    @Override
     public Enquiry createEnquiry(User creator, BTOProject project, String content) {
         String id = UUID.randomUUID().toString().substring(0, 8);
         Enquiry enquiry = new Enquiry(id, creator, project, content);
@@ -100,6 +106,7 @@ public class EnquiryManager {
         return enquiry;
     }
 
+    @Override
     public boolean updateEnquiry(String id, String content, User user) {
         Enquiry enquiry = getEnquiry(id);
         if (enquiry != null && enquiry.canEdit(user)) {
@@ -110,6 +117,7 @@ public class EnquiryManager {
         return false;
     }
 
+    @Override
     public boolean deleteEnquiry(String id, User user) {
         Enquiry enquiry = getEnquiry(id);
         if (enquiry != null && enquiry.canEdit(user) && !enquiry.hasReply()) {
@@ -120,6 +128,7 @@ public class EnquiryManager {
         return false;
     }
 
+    @Override
     public boolean addReply(String id, String reply, User user) {
         Enquiry enquiry = getEnquiry(id);
         if (enquiry != null && 
@@ -132,11 +141,22 @@ public class EnquiryManager {
         return false;
     }
 
+    /**
+     * Formats a datetime for display in reports
+     * @param dateTime The datetime to format
+     * @return A formatted string representation of the datetime
+     */
+    public String formatDateTimeForReport(LocalDateTime dateTime) {
+        if (dateTime == null) return "N/A";
+        return dateTime.format(DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a"));
+    }
+
+    @Override
     public boolean replyToEnquiry(String enquiryId, String reply, HDBManager manager) {
         for (Enquiry enquiry : enquiries) {
             if (enquiry.getId().equals(enquiryId)) {
                 if (manager.getManagedProjects().contains(enquiry.getProject())) {
-                    enquiry.setReply(reply);
+                    enquiry.addReply(reply); // Changed from setReply to addReply to properly set reply time
                     saveEnquiries();
                     return true;
                 }
@@ -145,4 +165,4 @@ public class EnquiryManager {
         }
         return false;
     }
-} 
+}
