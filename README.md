@@ -142,9 +142,9 @@ It states that high-level modules should not depend on low-level modules and bot
 
 This is closely linked with ISP shown above as the IUserManager simply calls methods on abstractions which are the different interface types like (IProjectManager). This demonstrates the idea of DIP as the Applicant menu (High level module) and Project Manager (low-level module) for example depends on abstractions (interface).
 
-- **High-level module**: ApplicantMenu (the UI logic), etc.
-- **Abstractions**: Interfaces IProjectManager, IApplicationManager, IEnquiryManager, etc.
-- **Low-level modules**: ProjectManager, ApplicationManager, EnquiryManager, etc.
+- **High-level module**: ApplicantMenu (the UI logic)
+- **Abstractions**: Interfaces IProjectManager, IApplicationManager, IEnquiryManager
+- **Low-level modules**: ProjectManager, ApplicationManager, EnquiryManager
 
 ### 2.3 Additional Features Implemented:
 - Password requirements (minimum of 6 characters, with 1 alphabet and 1 number)
@@ -177,10 +177,10 @@ To see our full test cases table, refer to the [Test Cases](Test%20Case/Test%20C
 ## 5.0 Reflection on Lessons Learned and Challenges Faced
 
 ### Reflection
-One lesson we took away from this project was the skill of balancing time management and creativity. Although good time management was important to ensure that we could meet the project deadline, we also had to account for a list of creative features that we wanted to include to enhance the functionality of the system. This taught us the importance of having a strong grasp of the relevant concepts taught in this module as key general concepts such as SOLID and OOP principles had a direct impact on the way we carry out the project. Technical knowledge such as UML class and sequence diagrams allowed us to effectively communicate our ideas and brush out any differences. It also highlighted areas of our comprehension that were still lacking, providing us an opportunity to then refine our understanding and address the gaps. Overall, this project enhanced our theoretical knowledge of Java and OOP. 
+One lesson we took away from this project was the skill of balancing time management and creativity. Although good time management was important to ensure that we could meet the project deadline, we also had to account for a list of creative features that we wanted to include to enhance the functionality of the system. This taught us the importance of having a strong grasp of the relevant concepts taught in this module as key general concepts such as SOLID and OOP principles had a direct impact on the way we carry out the project. Technical knowledge such as UML class and sequence diagrams allowed us to effectively communicate our ideas and brush out any differences. It also highlighted areas of our comprehension that were still lacking, providing us an opportunity to then refine our understanding and address the gaps. Overall, this project enhanced our theoretical knowledge of Java and OOP, and to apply the design and OOP principles we were taught 
 
 ### Challenges and How We Conquered Them
-Given the scale of this project, it reinforced our attention to details as small mistakes such as stray colons or mistyped variable names can often result in major functionality issues down the line. This made us improve on our documentation and communication practices to maintain consistency of work across the team so as to minimise redundant work and allow us to better spot mistakes. Another challenge was incorporating the SOLID design principles as we are so used to coding without any knowledge of coding principles. Therefore, this taught us to be more aware and stringent in our coding.
+Given the scale of this project, it reinforced our attention to details as small mistakes such as stray colons or mistyped variable names can often result in major functionality issues down the line. This made us improve on our documentation and communication practices to maintain consistency of work across the team so as to minimise redundant work and allow us to better spot mistakes. Another challenge was incorporating the SOLID design principles as we are so used to coding without any knowledge of coding principles. Therefore, this taught us to be more aware and stringent in our coding, which will also be useful in future should we need to extend the code to meet various needs
 
 ## Project Structure
 
