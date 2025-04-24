@@ -142,9 +142,9 @@ It states that high-level modules should not depend on low-level modules and bot
 
 This is closely linked with ISP shown above as the IUserManager simply calls methods on abstractions which are the different interface types like (IProjectManager). This demonstrates the idea of DIP as the Applicant menu (High level module) and Project Manager (low-level module) for example depends on abstractions (interface).
 
-- **High-level module**: ApplicantMenu (the UI logic), etc.
-- **Abstractions**: Interfaces IProjectManager, IApplicationManager, IEnquiryManager, etc.
-- **Low-level modules**: ProjectManager, ApplicationManager, EnquiryManager, etc.
+- **High-level module**: ApplicantMenu (the UI logic)
+- **Abstractions**: Interfaces IProjectManager, IApplicationManager, IEnquiryManager
+- **Low-level modules**: ProjectManager, ApplicationManager, EnquiryManager
 
 ### 2.3 Additional Features Implemented:
 - Password requirements (minimum of 6 characters, with 1 alphabet and 1 number)
