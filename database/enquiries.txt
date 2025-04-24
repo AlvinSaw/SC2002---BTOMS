@@ -2,3 +2,4 @@
 23456|S2345678B|Acacia Breeze|Are there any nearby MRT stations?|Yes, Boon Lay MRT station is within 10 minutes walking distance.
 34567|S3456789C|Acacia Breeze|What are the nearby schools?|
 45678|S4567890D|Acacia Breeze|Is there a shopping mall nearby?|Jurong Point shopping mall is just 5 minutes away. 
+910de321|S3456789C|CCC|Hello|Bye
